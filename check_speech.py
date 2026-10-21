@@ -1,4 +1,4 @@
-﻿"""Speech notifications keep real actions and a shaped click-through silhouette."""
+"""Speech notifications keep real actions and a shaped click-through silhouette."""
 from pathlib import Path
 import tempfile
 import tkinter as tk
@@ -17,7 +17,7 @@ with tempfile.TemporaryDirectory() as folder:
             app.select_language(language)
             app.close_menu()
             app.hide_tray(immediate=True)
-            for pet_y in (300,680):
+            for pet_y in (20,300,680):
                 app.pet_x,app.pet_y=700,pet_y
                 for kind in ('complete','error','waiting'):
                     app.toast_queue=[(kind,app.selected,'fictional-project-with-a-long-name')]
@@ -34,8 +34,12 @@ with tempfile.TemporaryDirectory() as folder:
                     assert body.winfo_height()>=body.winfo_reqheight(),(language,kind)
                     assert not desktop.contains(window,x,y)
                     assert not desktop.contains(window,x+width-1,y+height-1)
-                    above=pet_y==680
-                    tail_x=app.pet_x+32-x
+                    above=pet_y!=20
+                    geometry=desktop.speech_placement(app.pet_x,pet_y,(0,0,1024,768),width,height)
+                    assert geometry["above"]==above
+                    if above:
+                        assert y+height<pet_y and geometry["base"]<geometry["tip"]
+                    tail_x=round(geometry["tip"]*.75+geometry["base"]*.25)
                     tail_y=height-3 if above else 3
                     assert desktop.contains(window,x+tail_x,y+tail_y),(language,above)
                     if kind=='complete':

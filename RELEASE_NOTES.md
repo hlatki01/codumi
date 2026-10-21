@@ -1,15 +1,9 @@
-﻿# codumi v0.2.1 — A little voice
+# codumi v0.2.2 ? A better place to talk
 
-Your companion now speaks through a chat bubble.
+Speech bubbles now sit above and to the left of your companion, with a gently slanted tail pointing back toward the pet. When the pet is too close to the top edge, the bubble uses the space below to remain visible.
 
-- Rounded dark bubbles with a tail pointing toward the pet.
-- First-person completion, error, and attention messages in all six languages.
-- The bubble moves above the pet when space below is limited.
-- Click its message to open the session, or × to dismiss it. Transparent corners pass clicks through to the application underneath.
-- Moving the pet dismisses its current bubble.
+Click-to-open, dismissal, transparent corners, all six languages, and existing preferences are preserved.
 
-All v0.2 features remain available. Existing preferences stay compatible. To update into a fresh folder, close codumi and copy your preferences.json into the new extracted folder before launching codumi.exe.
+Validation: 49 unit tests and native speech checks for all three notice types in six languages, text fit, both sides, top-edge fallback, negative monitor coordinates, shaped hit regions, and session actions.
 
-49 unit tests passed. Native speech checks cover six languages, three message types, text fit, both tail directions, screen edges, shaped hit regions, session actions, and dismissal.
-
-The executable remains unsigned. Cursor's available states and usage depend on its local transcripts, and original-window activation remains subject to Windows foreground rules.
+The Windows x64 executable is unsigned. Extract the full ZIP; close the old instance and copy preferences.json when updating into a new folder.

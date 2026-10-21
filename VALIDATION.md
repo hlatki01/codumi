@@ -53,7 +53,7 @@ The portable launcher passed its demo smoke test. Release archives are checked a
 
 ## v0.2.1 speech bubbles
 
-`check_speech.py` verifies all three first-person messages in all six languages, text fit, above/below placement, negative monitor coordinates, edge clamping, transparent hit regions, the tail region, session activation, and dismissal. The full 49-test unit suite also passes.
+`check_speech.py` verifies all three first-person messages in all six languages, text fit, above-left placement with a slanted tail, fallback at the top edge, negative monitor coordinates, edge clamping, transparent hit regions, the tail region, session activation, and dismissal. The full 49-test unit suite also passes.
 
 ## Important limits
 

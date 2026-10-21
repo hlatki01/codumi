@@ -1148,11 +1148,11 @@ class App:
         top,bottom=(0,height-12) if p["above"] else (12,height)
         edge=bottom-2 if p["above"] else top+2
         point=height-1 if p["above"] else 1
-        canvas.create_polygon(p["tip"]-9,edge,p["tip"],point,p["tip"]+9,edge,
+        canvas.create_polygon(p["base"]-9,edge,p["tip"],point,p["base"]+9,edge,
                               fill=BG,outline=BORDER,width=1)
         rounded(canvas,1,top+1,width-1,bottom-1,16,BG,BORDER)
         join=bottom-1 if p["above"] else top+1
-        canvas.create_line(p["tip"]-7,join,p["tip"]+7,join,fill=BG,width=2)
+        canvas.create_line(p["base"]-7,join,p["base"]+7,join,fill=BG,width=2)
         canvas.create_oval(17,top+17,22,top+22,fill=MINT,outline="")
         canvas.create_text(29,top+20,text=self.t.pet_name(self.pet.pet_id),anchor="w",fill=MINT,
                            font=("Segoe UI",9,"bold"))
@@ -1162,7 +1162,7 @@ class App:
                   font=("Segoe UI",11),cursor="hand2").place(x=width-35,y=top+10,width=23,height=24)
         window.deiconify()
         desktop.place(window,p["x"],p["y"],width,height)
-        desktop.speech_shape(window,width,height,p["tip"],p["above"])
+        desktop.speech_shape(window,width,height,p["tip"],p["above"],p["base"])
         self.toast_timer=self.root.after(5000,self.dismiss_notice)
 
     def save_preferences(self):

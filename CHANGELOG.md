@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## v0.2.2 ? A better place to talk
+
+- Speech bubbles prefer a position above and to the left of the pet.
+- The tail slopes gently up-left from the pet toward the bubble.
+- Near the screen's top edge, bubbles fall back below without clipping.
+
 ## v0.2.1 — A little voice
 
 - Notifications are rounded speech bubbles with a tail pointing toward the pet.

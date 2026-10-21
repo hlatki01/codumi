@@ -39,12 +39,13 @@ def circle_contains(x, y, px, py):
 def speech_placement(x,y,area,width,height):
     left,top,right,bottom=area
     width=min(width,right-left-24)
-    bx=max(left+12,min(x+64-width,right-width-12))
-    above=y+72+height>bottom-12
+    bx=max(left+12,min(x+40-width,right-width-12))
+    above=y-height-8>=top+12
     by=y-height-8 if above else y+72
     by=max(top+12,min(by,bottom-height-12))
-    tip=max(20,min(x+32-bx,width-20))
-    return dict(x=bx,y=by,width=width,height=height,tip=tip,above=above)
+    tip=max(20,min(x+18-bx,width-20))
+    base=max(20,min(tip-14,width-20))
+    return dict(x=bx,y=by,width=width,height=height,tip=tip,base=base,above=above)
 
 
 class Spring:
@@ -251,13 +252,13 @@ class GlobalHotkey:
         return True
 
 
-def speech_shape(window,width,height,tip,above):
+def speech_shape(window,width,height,tip,above,base):
     if not WINDOWS: return
     top,bottom=(0,height-12) if above else (12,height)
     edge=bottom-1 if above else top+1
     point=height if above else 0
     region=gdi.CreateRoundRectRgn(0,top,width,bottom,32,32)
-    points=(w.POINT*3)(w.POINT(tip-9,edge),w.POINT(tip,point),w.POINT(tip+9,edge))
+    points=(w.POINT*3)(w.POINT(base-9,edge),w.POINT(tip,point),w.POINT(base+9,edge))
     tail=gdi.CreatePolygonRgn(points,3,1)
     try:
         if not region or not tail or not gdi.CombineRgn(region,region,tail,2): raise c.WinError()
