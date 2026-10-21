@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+dist/
+*.log
+preferences.json
+preferences.tmp
+*.tmp
+*.tmp.py
+preview-*.png
+.env
+.env.*
+!.env.example
