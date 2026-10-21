@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+from urllib.parse import urlparse, unquote
 import time
 from collections import deque
 from dataclasses import dataclass, field, replace
@@ -45,12 +47,14 @@ class Session:
     tokens: int = 0
     completed: float = 0.0
     events: deque = field(default_factory=lambda: deque(maxlen=6))
+    project_hint: str = ""
+    usage: tuple = (0,0,0,0)
     tokens_partial: bool = False
     _claude_usage: dict = field(default_factory=dict,repr=False,compare=False)
 
     @property
     def project(self):
-        return PureWindowsPath(self.cwd).name if self.cwd else "Sessão local"
+        return PureWindowsPath(self.cwd).name if self.cwd else (self.project_hint or "Sessão local")
 
     def display_state(self, now=None):
         age = (time.time() if now is None else now) - self.updated
@@ -60,6 +64,10 @@ class Session:
     def apply(self, record, fallback):
         if not isinstance(record, dict):
             return
+        if self.provider=="Cursor":
+            record=dict(record)
+            if "type" not in record:
+                record["type"]=record.get("role")
         kind = record.get("type")
         body = record.get("payload")
         body = body if isinstance(body, dict) else {}
@@ -99,6 +107,17 @@ class Session:
                 elif event == "message" and body.get("role") == "assistant":
                     state = "idle" if body.get("phase") == "final_answer" else "working"
                     label = "Resposta concluída" if state == "idle" else "Respondendo"
+        elif self.provider=="Cursor" and kind in {"result","tool_call","thinking"}:
+            if kind=="result":
+                state,label=("error","Ferramenta retornou erro") if record.get("is_error") else ("idle","Resposta concluída")
+                self.set_tokens(record.get("usage"))
+            elif kind=="thinking":
+                state,label="thinking","Pensando"
+            else:
+                tool=record.get("tool_call")
+                if isinstance(tool,dict):
+                    self.tool=str(next(iter(tool),"Ferramenta"))[:80]
+                state,label="working",self.tool or "Respondendo"
         else:
             message = record.get("message")
             message = message if isinstance(message, dict) else {}
@@ -138,9 +157,13 @@ class Session:
         total = usage.get("total_tokens") if isinstance(usage, dict) else None
         if type(total) is int and 0<=total<2**63:
             self.tokens = max(self.tokens, total)
+        if isinstance(usage,dict):
+            fields=("input_tokens","output_tokens","cache_creation_input_tokens","cached_input_tokens")
+            values=tuple(usage.get(key,0) for key in fields)
+            self.usage=tuple(max(a,b) if type(b) is int and 0<=b<2**63 else a for a,b in zip(self.usage,values))
 
     def add_claude_tokens(self, record):
-        if not isinstance(record,dict) or record.get("type")!="assistant":
+        if not isinstance(record,dict) or record.get("type",record.get("role"))!="assistant":
             return
         message=record.get("message")
         if not isinstance(message,dict) or not isinstance(message.get("usage"),dict):
@@ -154,6 +177,7 @@ class Session:
         current=tuple(max(old,value) if type(value) is int and 0<=value<2**63 else old
                       for old,value in zip(previous,(usage.get(key,0) for key in fields)))
         self.tokens+=sum(current)-sum(previous)
+        self.usage=tuple(a+b-old for a,b,old in zip(self.usage,current,previous))
         self._claude_usage[identity]=current
 
 
@@ -182,8 +206,11 @@ class Tail:
         self.offset = max(0, stat.st_size - LIMIT)
         self.skip = self.offset > 0
         self.session = Session(str(path), provider, started=stat.st_mtime, updated=stat.st_mtime)
+        if provider=="Cursor" and "agent-transcripts" in path.parts:
+            index=path.parts.index("agent-transcripts")
+            self.session.project_hint=path.parts[index-1] if index else "Cursor"
         self.usage_offset,self.usage_skip=0,False
-        self.usage_target=self.offset if provider=="Claude" else 0
+        self.usage_target=self.offset if provider in {"Claude","Cursor"} else 0
         self.session.tokens_partial=self.usage_target>0
         with path.open("rb") as handle:
             first = handle.readline(65536)
@@ -215,8 +242,27 @@ class Tail:
 class Monitor:
     def __init__(self, home=None):
         home = Path.home() if home is None else Path(home)
+        self.cursor_workspaces={}
+        storage=home/"AppData/Roaming/Cursor/User/workspaceStorage"
+        try:
+            for index,path in enumerate(storage.glob("*/workspace.json")):
+                if index>=256: break
+                if path.is_symlink() or path.stat().st_size>65536: continue
+                try:
+                    data=json.loads(path.read_text(encoding="utf-8"))
+                    uri=data.get("folder") if isinstance(data,dict) else None
+                    if not isinstance(uri,str) or len(uri)>4096: continue
+                    parsed=urlparse(uri)
+                    if parsed.scheme!="file" or parsed.netloc: continue
+                    cwd=unquote(parsed.path)
+                    if re.match(r"^/[A-Za-z]:/",cwd): cwd=cwd[1:]
+                    encoded=re.sub(r"[^A-Za-z0-9]+","-",cwd).strip("-").casefold()
+                    self.cursor_workspaces[encoded]="" if encoded in self.cursor_workspaces and self.cursor_workspaces[encoded].casefold()!=cwd.casefold() else cwd
+                except (ValueError,OSError,RecursionError): continue
+        except OSError: pass
         self.roots = [(Path(os.environ.get("CODEX_HOME", home / ".codex")) / "sessions", "Codex"),
-                      (Path(os.environ.get("CLAUDE_CONFIG_DIR", home / ".claude")) / "projects", "Claude")]
+                      (Path(os.environ.get("CLAUDE_CONFIG_DIR", home / ".claude")) / "projects", "Claude"),
+                      (home / ".cursor" / "projects", "Cursor")]
         self.tails = {}
         self.scanned = 0
         self.warning = ""
@@ -229,7 +275,7 @@ class Monitor:
             for root, provider in self.roots:
                 try:
                     for path in root.rglob("*.jsonl"):
-                        if path.is_symlink() or "subagents" in path.parts:
+                        if path.is_symlink() or "subagents" in path.parts or (provider=="Cursor" and "agent-transcripts" not in path.parts):
                             continue
                         modified = path.stat().st_mtime
                         if now - modified < 86400:
@@ -243,6 +289,9 @@ class Monitor:
                 if path not in self.tails:
                     try:
                         self.tails[path] = Tail(path, provider)
+                        session=self.tails[path].session
+                        if provider=="Cursor" and not session.cwd:
+                            session.cwd=self.cursor_workspaces.get(session.project_hint.casefold(),"")
                     except OSError:
                         warnings.append("Uma sessão está temporariamente inacessível.")
             self.scanned = now

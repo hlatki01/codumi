@@ -97,6 +97,26 @@ def exit_pose(progress, jump_height, sideways):
     return sideways*hop,-jump_height*hop,1-shrink*shrink*(3-2*shrink)
 
 
+def personality_motion(pet_id,state,t):
+    """Small species-specific gestures layered over the shared state animation."""
+    if state not in {"working","idle","sleeping"}: return 0,0,0
+    if state in {"idle","sleeping"}:
+        if pet_id=="cat": return .018*max(0,math.sin(t*.7)),0,0
+        if pet_id=="robot": return .006*math.sin(t*1.2),0,0
+        if pet_id=="dragon": return 0,math.sin(t*1.3)*.8,0
+        return 0,0,0
+    if pet_id=="cat": return 0,0,math.sin(t*3)*.4
+    if pet_id=="dog": return 0,0,math.sin(t*9)*.8
+    if pet_id=="fox": return 0,math.sin(t*4)*.5,math.sin(t*2)*.4
+    if pet_id=="rabbit": return 0,-max(0,math.sin(t*4))*2,0
+    if pet_id=="panda": return .008*math.sin(t*2),0,math.sin(t*1.6)*.6
+    if pet_id=="frog": return -.012*max(0,math.sin(t*3)), -max(0,math.sin(t*3))*1.7,0
+    if pet_id=="owl": return 0,math.sin(t*2.5)*.8,0
+    if pet_id=="robot": return 0,(int(t*4)%2)*.5,0
+    if pet_id=="dragon": return .01*math.sin(t*2),math.sin(t*2)*1.2,0
+    return 0,0,0
+
+
 class PetAvatar:
     def __init__(self, canvas, pet_id="notchi"):
         self.canvas = c = canvas
@@ -222,6 +242,11 @@ class PetAvatar:
             phase = 1-(self.jump_until-now)/.55
             bob -= math.sin(math.pi*phase)*7
         shake = math.sin((now-self.changed)*36)*1.5 if state=="error" and now-self.changed<.55 and not reduced else 0
+        if not reduced:
+            stretch,hop,sway=personality_motion(self.pet_id,state,t)
+            scale+=stretch
+            bob+=hop
+            shake+=sway
         angle = 0
         if reacting:
             if not reduced:

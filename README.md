@@ -10,7 +10,7 @@ A little pet for the corner of your screen.<br>
 A window into what your coding agents are doing.<br>
 And a small celebration when the work is done.
 
-**Windows x64 · Claude Code + Codex · 10 pets · 6 languages · MIT**
+**Windows x64 · Claude Code + Codex + Cursor · 10 pets · 6 languages · MIT**
 
 [**Adopt your codumi →**](https://github.com/hlatki01/codumi/releases/latest)<br>
 [Meet the pets](#pick-your-deskmate) · [Get started](#from-download-to-deskmate) · [Contribute](#theres-room-for-one-more)
@@ -67,7 +67,7 @@ Choose one in **Settings → Pet**. Drag the bubble wherever it feels at home; c
 
 ## Small bubble. Useful view.
 
-Hover to see your recent Claude Code and Codex sessions: project, provider, state, and token usage. Click a session for its latest prompt, elapsed time, exact token total, and recent activity. Click it again to fold the details away.
+Hover to see your recent Claude Code, Codex, and Cursor sessions: project, provider, state, and token usage. Click a session for its latest prompt, elapsed time, exact token total, and recent activity. Click it again to fold the details away.
 
 ```text
 orbit
@@ -80,6 +80,26 @@ Codex  · Resting · 48.6K tokens
 The pet can show working, thinking, waiting, ready, resting, error, and context compaction, with a brief celebration on completion. The tray includes session filtering and activity counts. An optional always-on-top setting keeps your companion nearby.
 
 **Want the original terminal?** Select a session and click **Focus terminal**. If discovery is ambiguous, use **Activity → Choose terminal window… → Use this window**. Windows may refuse activation, and selecting a particular terminal tab or pane is not automated. See the technical notes below.
+
+## New in v0.2: a companion with a memory
+
+- **Pin your projects.** Right-click a session or use **Pin project** in its details. Favorites stay at the top, and your selected session is remembered.
+- **Know when to look up.** Discreet, clickable notices for completion, errors, and requests for attention. Choose each notice type independently.
+- **One little star.** A completed session leaves a star on the bubble for up to a minute. Click the star to open that session.
+- **A sleepy pet can have busy neighbors.** A small mint counter shows other working, thinking, or compacting sessions; the hover tooltip explains it.
+- **Make room for focus.** A 25-minute concentration mode quiets notices and sound and makes the pet still. End it early from settings.
+- **See observed usage.** Session totals and daily increments, with input, output, and cache details when recorded. Historical discovery is excluded from today's count.
+- **Remember the window.** Manual terminal or Cursor window associations persist per project. Window and process identity are checked again before focusing. Closed or replaced windows require reassociation.
+- **A shortcut to your companion.** **Ctrl+Alt+N** opens or hides the tray. Settings cycle through alternative shortcuts or turn it off; conflicts are reported.
+- **More personality.** Each species has its own small working gesture, with extra resting gestures for the cat, robot, and dragon.
+
+Find notices, concentration, shortcuts, and token summaries in **Settings → Companion & activity**. This panel scrolls on smaller screens.
+
+### Cursor, meet codumi
+
+Recent local JSONL conversations under `.cursor/projects/*/agent-transcripts` appear automatically. codumi also understands Cursor's [documented stream JSON events](https://cursor.com/docs/cli/reference/output-format) when present in those transcripts. Workspace metadata supplies the project path when available; otherwise the encoded project folder is shown.
+
+Cursor transcripts vary by version: plain message records may omit completion, permission, timestamp, and usage information. codumi does not invent missing tokens or completion events; a session with no new recorded activity eventually rests. Legacy text-only transcripts and remote cloud-agent storage are not monitored. Use **Focus Cursor** to choose the original window the first time. Its validated identity is remembered for that project across codumi restarts; closed or replaced windows require choosing again.
 
 ## From download to deskmate
 
@@ -121,7 +141,7 @@ Project names, prompts, provider names, and tool identifiers keep their original
 
 codumi reads local session transcripts. It does not install agent hooks, modify conversations, read authentication files, or send session data over the network. Prompts appear locally in the tray.
 
-Preferences live beside the app in `preferences.json`; diagnostic errors go to `codumi.log`. Neither is included in Git or release archives.
+Preferences, favorite project hashes, the selected transcript path, window association metadata, and up to 31 days of observed usage totals live beside the app in `preferences.json`; diagnostic errors go to `codumi.log`. Neither is included in Git or release archives.
 
 <details>
 <summary><strong>Under the bubble: session states, tokens, and terminal discovery</strong></summary>
@@ -130,6 +150,7 @@ Preferences live beside the app in `preferences.json`; diagnostic errors go to `
 
 - Claude Code: `%USERPROFILE%\.claude\projects`, or `CLAUDE_CONFIG_DIR\projects`.
 - Codex: `%USERPROFILE%\.codex\sessions`, or `CODEX_HOME\sessions`.
+- Cursor: `%USERPROFILE%\.cursor\projects\*\agent-transcripts`. Cursor workspace metadata is read from `%APPDATA%\Cursor\User\workspaceStorage` when available.
 
 A background reader discovers up to 48 recently updated sessions, reads bounded JSONL tails, and follows complete appended lines.
 
@@ -141,11 +162,13 @@ Token usage appears after session status. Codex uses the transcript's cumulative
 
 Large Claude histories are counted in bounded background chunks without replacing live state. A **≥** prefix means older records are still being counted. Open session details for the unabridged number. When usage is absent, codumi does not invent a count; malformed or oversized records are skipped.
 
+Daily totals count only new usage observed while codumi runs, starting with a baseline after launch and after historical backfill. Usage while the app is closed is not included. Cache reads may be a subset of input for some providers; the breakdown is not always additive.
+
 These are **processed-token totals across requests**, including cache usage, rather than the current context-window size. Claude's fields follow the [documented usage breakdown](https://platform.claude.com/docs/en/build-with-claude/prompt-caching).
 
 ### Returning to the original terminal
 
-codumi uses Claude's session registry or the process holding Codex's writer file, checks process creation times, and looks for a visible console or terminal-host ancestor. Manual window associations last while codumi is open.
+codumi uses Claude's session registry or the process holding Codex's writer file, checks process creation times, and looks for a visible console or terminal-host ancestor. Manual window associations are saved per provider and project using the original window handle, PID, process creation time, title, class, and executable. Restoring requires that same live window; stale, missing, or changed matches return to discovery or manual selection. A newly opened window is never identified solely by a matching project name.
 
 It does not open another shell or send commands to your session. Closed or editor-integrated sessions may have no usable terminal window. Windows can refuse foreground activation; selecting an exact tab or pane is not automated. Foreground activation still needs broader testing on regular user desktops.
 
@@ -197,6 +220,7 @@ python check_terminal.py
 python check_terminal_picker.py
 python check_exit.py
 python check_tokens.py
+python check_companion.py
 python app.py --demo --smoke-test
 ```
 
@@ -205,7 +229,7 @@ Native checks create temporary windows and preferences. Run them on Windows with
 No linter is configured. Check syntax with:
 
 ```powershell
-python -m py_compile app.py desktop.py pet.py sessions.py i18n.py terminal.py build.py
+python -m py_compile app.py desktop.py pet.py sessions.py i18n.py terminal.py companion.py build.py
 ```
 
 ### Package for Windows
@@ -231,7 +255,8 @@ The ZIP includes source, licenses, documentation, and a local Python/Tcl/Tk runt
 | `app.py` | Floating windows, tray, settings, selection, and preferences |
 | `pet.py` | Ten native sprites and retained-canvas animations |
 | `desktop.py` | Win32 behavior, monitor geometry, input regions, and spring motion |
-| `sessions.py` | Read-only Claude/Codex transcript adapters |
+| `sessions.py` | Read-only Claude/Codex/Cursor transcript adapters |
+| `companion.py` | Project identities, observed daily usage, and notification deduplication |
 | `terminal.py` | Terminal discovery, identity checks, and focus requests |
 | `i18n.py`, `locales.json` | Windows language detection and translations |
 | `Launcher.cs`, `build.py` | Windows launcher and portable packaging |

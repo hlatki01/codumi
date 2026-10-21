@@ -1,31 +1,36 @@
-﻿# codumi v0.1.0
+# codumi v0.2.0 — A companion with a memory
 
-Your little coding companion — now on Windows.
+Your little coding companion now remembers its favorite projects and brings Cursor into the session tray.
 
-This first public release includes ten animated pets, a connected hover tray, local Claude Code and Codex session monitoring, six languages, saved preferences, and reduced-motion support.
+## New
 
-Hover to see sessions, drag to reposition your pet, and open settings to choose its appearance and language. While working, it follows your cursor with its eyes. Four quick clicks trigger a brief fall-and-cry reaction; quitting plays an animated goodbye.
+- Read-only discovery of local Cursor JSONL transcripts, plus workspace metadata matching when available.
+- Pin projects and keep them at the top; remember the selected session after restarting codumi.
+- Configurable, clickable notices for task completion, errors, and requests for attention.
+- A temporary completion star that opens the finished session, and a small indicator for other busy sessions.
+- Session token breakdowns and daily increments observed while codumi runs.
+- A 25-minute concentration mode that silences notices and sound and stills the pet.
+- A native global shortcut: Ctrl+Alt+N, with alternative combinations, an Off option, and conflict reporting.
+- Persistent project window associations validated against the original live window and process identity. Cursor asks you to choose its original window on first use.
+- Distinct species gestures and a scrollable companion settings panel in all six languages.
 
-Click a session to expand its details, then click it again to collapse them. Token totals appear immediately after its status for both Claude and Codex; a partial-count marker indicates that older Claude history is still being counted. The pet follows the selected session.
+Open Settings → Companion & activity for notice controls, concentration, shortcuts, and usage summaries. Pin a project from session details or by right-clicking its row.
 
-## Download
+## Download and update
 
-Download **codumi-v0.1.0-windows-x64.zip**, extract the entire folder, and open **codumi.exe**. No Python installation, account, or API key is required.
+Extract the entire Windows x64 ZIP to a writable folder and open codumi.exe. Python is bundled; no account or API key is required for monitoring.
 
-The archive contains source code and runtime licenses. **SHA256SUMS.txt** contains its SHA-256 checksum.
+To preserve settings when moving to a fresh folder, close the previous codumi instance and copy its preferences.json into the new extracted folder before opening the app. Keep the full runtime folder with the executable. Existing pet, position, language, sound, and topmost settings remain compatible.
 
-## Open source
+Application code and sprites are MIT-licensed. Everyone is welcome to contribute fixes, translations, pets, accessibility improvements, and Windows testing.
 
-The application code and sprites are MIT-licensed. Everyone is welcome to contribute fixes, translations, design feedback, accessibility improvements, and Windows testing. See CONTRIBUTING.md.
+## Limits
 
-Inspired by sk-ruban/notchi; this is an independent Windows implementation.
-
-## Known limitations
-
-The executable is unsigned. Terminal focus is best-effort, and tab/pane selection is not automated. If automatic discovery fails, use **Activity → Choose terminal window…** to associate the original window.
-
-Foreground activation and Codex's Restart Manager lookup still need broader validation on regular user desktops. Physical mixed-DPI monitor setups, screen readers, clean Windows installations, ARM64, and prolonged resource use have not been fully validated.
+- Cursor formats vary. Completion, permission, timestamp, and usage fields may be absent. Missing tokens or completion events are never invented; legacy text-only and remote cloud transcripts are not monitored.
+- Daily totals include new usage observed with codumi open, excluding historical discovery and backfill. They do not reconstruct usage while codumi was closed.
+- Saved window associations are valid only while the original window and process identity remain valid. Windows may refuse foreground activation; exact terminal tab/pane selection is not automated.
+- The executable is unsigned. Real key presses, physical mixed-DPI monitors, screen readers, clean installations, and prolonged resource use need broader user-desktop testing.
 
 ## Validation
 
-40 unit tests passed. Native checks cover hover, dragging, transparent hit regions, session controls, six-language layouts, all ten pets, click reactions, window selection, and animated exit. The portable launcher passed its smoke test.
+49 unit tests plus native checks cover the session readers, settings in six languages, favorites, notices, concentration, usage, hotkey message delivery and cleanup, window identity validation, hover, dragging, token labels, all ten pets, and animated exit. The companion panel is also exercised on a 640×480 work area. See VALIDATION.md for environmental limitations.

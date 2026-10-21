@@ -3,6 +3,7 @@ from __future__ import annotations
 import ctypes as c
 from ctypes import wintypes as w
 import sys
+import threading
 
 WINDOWS = sys.platform == "win32"
 PET_SIZE = 64
@@ -176,3 +177,64 @@ def exit_overlay(window):
         user.SetWindowLongPtrW(hwnd,-20,user.GetWindowLongPtrW(hwnd,-20)|0x20)
         if not user.SetWindowRgn(hwnd,None,True):
             raise c.WinError()
+
+
+class GlobalHotkey:
+    """Own the hotkey message queue so Tk cannot consume WM_HOTKEY first."""
+    def __init__(self):
+        self.signal=threading.Event()
+        self.thread=None
+        self.thread_id=0
+        self.registered=False
+        self.identity=0x4344
+        if WINDOWS:
+            user.RegisterHotKey.argtypes=[w.HWND,c.c_int,w.UINT,w.UINT]
+            user.RegisterHotKey.restype=w.BOOL
+            user.UnregisterHotKey.argtypes=[w.HWND,c.c_int]
+            user.PeekMessageW.argtypes=[c.POINTER(w.MSG),w.HWND,w.UINT,w.UINT,w.UINT]
+            user.GetMessageW.argtypes=[c.POINTER(w.MSG),w.HWND,w.UINT,w.UINT]
+            user.GetMessageW.restype=c.c_int
+            user.PostThreadMessageW.argtypes=[w.DWORD,w.UINT,w.WPARAM,w.LPARAM]
+
+    def set(self,name):
+        if not self.close(): return False
+        if name=="Off": return True
+        choices={"Ctrl+Alt+N":(0x4003,0x4e),"Ctrl+Shift+F12":(0x4006,0x7b),"Ctrl+Alt+Space":(0x4003,0x20)}
+        if not WINDOWS or name not in choices: return False
+        ready=threading.Event()
+        def listen():
+            msg=w.MSG()
+            try:
+                user.PeekMessageW(c.byref(msg),None,0,0,0)
+                self.thread_id=c.windll.kernel32.GetCurrentThreadId()
+                self.registered=bool(user.RegisterHotKey(None,self.identity,*choices[name]))
+                ready.set()
+                if not self.registered: return
+                while user.GetMessageW(c.byref(msg),None,0,0)>0:
+                    if msg.message==0x312 and msg.wParam==self.identity: self.signal.set()
+            finally:
+                if self.registered: user.UnregisterHotKey(None,self.identity)
+                self.registered=False
+                ready.set()
+        self.thread=threading.Thread(target=listen,daemon=True,name="global-shortcut")
+        self.thread.start()
+        if not ready.wait(2):
+            self.close()
+            return False
+        return self.registered
+
+    def pressed(self):
+        pressed=self.signal.is_set()
+        self.signal.clear()
+        return pressed
+
+    def close(self):
+        if self.thread and self.thread.is_alive() and WINDOWS and self.thread_id:
+            user.PostThreadMessageW(self.thread_id,0x12,0,0)
+            self.thread.join(1)
+            if self.thread.is_alive(): return False
+        self.thread=None
+        self.thread_id=0
+        self.registered=False
+        self.signal.clear()
+        return True

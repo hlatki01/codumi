@@ -1,5 +1,21 @@
 ﻿# Changelog
 
+## v0.2.0 — A companion with a memory
+
+- Read-only Cursor JSONL transcript support and workspace metadata matching.
+- Persistent project favorites, selected session, and validated window associations.
+- Configurable completion, error, and attention notices without focus stealing.
+- A temporary clickable completion star and a counter for other busy sessions.
+- Session and observed daily token summaries, including recorded input/output/cache fields.
+- A 25-minute focus mode that silences notices and sound and stills the pet.
+- A configurable native global shortcut with conflict reporting and cleanup.
+- Distinct species gestures, localized settings, and a scrollable companion panel.
+- Portable package includes the new module and README images.
+
+### Limits
+
+Cursor records can omit completion, timestamps, and token usage. Legacy text-only and remote cloud transcripts are not monitored. Daily usage is observed while codumi runs, not a reconstruction of all usage for the day. Window restoration requires the original live window and process identity, and Windows may still refuse foreground activation.
+
 ## v0.1.0 — Initial release
 
 - Floating 64 px pet with a connected hover tray.

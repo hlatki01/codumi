@@ -1,4 +1,4 @@
-﻿"""Resolve a live session to its original console; never launch a replacement shell."""
+"""Resolve a live session to its original console; never launch a replacement shell."""
 import ctypes as c
 from ctypes import wintypes as w
 import json
@@ -131,7 +131,7 @@ def available_terminals():
     user.EnumWindows(consoles,0)
     choices=[]
     for pid,(_,name) in processes.items():
-        if name not in TERMINAL_HOSTS and pid not in console_pids:
+        if name not in TERMINAL_HOSTS|{"cursor.exe"} and pid not in console_pids:
             continue
         started=process_start(pid)
         if not started:
@@ -139,7 +139,7 @@ def available_terminals():
         for target in process_windows(pid,started):
             window_class=c.create_unicode_buffer(128)
             user.GetClassNameW(target[0],window_class,128)
-            if name not in TERMINAL_HOSTS and window_class.value!="ConsoleWindowClass":
+            if name not in TERMINAL_HOSTS|{"cursor.exe"} and window_class.value!="ConsoleWindowClass":
                 continue
             title=c.create_unicode_buffer(512)
             user.GetWindowTextW(target[0],title,512)
@@ -295,6 +295,26 @@ def focus_terminal(target):
     if user.IsIconic(hwnd):
         user.ShowWindow(hwnd,9)
     return bool(user.SetForegroundWindow(hwnd))
+
+
+def window_profile(target):
+    if not valid_target(target): return None
+    name=c.create_unicode_buffer(512)
+    cls=c.create_unicode_buffer(128)
+    user.GetWindowTextW(target[0],name,512)
+    user.GetClassNameW(target[0],cls,128)
+    executable=process_tree().get(target[1],(0,''))[1]
+    if not name.value or not cls.value or not executable: return None
+    return {'title':name.value,'class':cls.value,'exe':executable,'target':list(target)}
+
+
+def restore_window(profile):
+    if not isinstance(profile,dict) or set(profile)!={'title','class','exe','target'}: return None
+    if not all(isinstance(profile[k],str) and 0<len(profile[k])<=512 for k in ('title','class','exe')): return None
+    target=profile['target']
+    if not isinstance(target,list) or len(target)!=3 or not all(type(v) is int and 0<v<2**64 for v in target) or target[1]>=2**32: return None
+    target=tuple(target)
+    return target if valid_target(target) and window_profile(target)==profile else None
 
 
 if __name__=="__main__":

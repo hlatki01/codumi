@@ -4,7 +4,7 @@ Validation environment: Windows x64, Python 3.12 with Tcl/Tk and the bundled por
 
 ## Automated checks
 
-40 unit tests cover:
+49 unit tests cover:
 
 - Incremental Claude/Codex reading, malformed records, truncation, replacement, incomplete UTF-8, and bounded discovery.
 - Real transcript events for thinking and completion.
@@ -42,6 +42,14 @@ The portable launcher passed its demo smoke test. Release archives are checked a
 - Six usage regression tests cover repeated records, malformed counters, UUID fallback, history/tail overlap, truncation, snapshot isolation, and compact labels.
 - check_tokens.py verifies status-then-token order, exact detail totals, partial-count markers, six-language wrapping, and session click toggling.
 - Historical token backfill reads at most one additional bounded chunk per Claude session per poll; it never replaces the live prompt, status, or event stream.
+
+## v0.2 companion checks
+
+- Nine new unit tests cover Cursor role records and stream events, read-only discovery and workspace matching, usage baselines and backfill, notifications without replay, saved counters, project identity, original window profiles and stale identity rejection, hotkey registration and its dedicated message queue, and species gesture bounds.
+- `check_companion.py` covers pinning and ordering, saved selection, six-language companion settings, scrolling on a 640×480 work area, focus suppression, non-repeating notices, completion stars, other-session indicators, usage, and the Cursor action label.
+- Cursor's role/message record shape was inspected locally without printing message contents. Its live editor activation and absent completion/token fields cannot be proven by transcript parsing.
+- Global hotkey delivery is exercised with a message posted to its own Win32 thread; actual key presses on the normal user desktop need user testing.
+- Daily counters intentionally exclude initial discovery, history backfill, and usage while the app is closed. Old preferences retain pet, position, language, sound, and topmost settings.
 
 ## Important limits
 

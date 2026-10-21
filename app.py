@@ -17,6 +17,7 @@ import desktop
 import terminal
 from pet import PetAvatar, PETS, COLORS, MINT, mix, pet_preview
 from sessions import Monitor, Session
+from companion import Activity, HOTKEYS, project_id
 from i18n import APP_NAME, Translator, LANGUAGE_NAMES
 
 BG = "#0D1522"
@@ -143,11 +144,17 @@ class HoverTray:
         self.detail_frame = tk.Frame(self.window, bg=BG)
         self.meta = tk.Label(self.detail_frame, bg=BG, fg=MINT, font=("Segoe UI", 9), anchor="w")
         self.meta.pack(fill="x", pady=(0, 6))
-        self.terminal_button = tk.Button(self.detail_frame,text=self.t("focus_terminal"),
+        self.detail_actions=tk.Frame(self.detail_frame,bg=BG)
+        self.detail_actions.pack(fill="x",pady=(0,4))
+        self.pin_button=tk.Button(self.detail_actions,command=app.toggle_favorite,bg=BG,fg=MINT,
+                                  activebackground=CARD,activeforeground=TEXT,relief="flat",
+                                  font=("Segoe UI",9),cursor="hand2")
+        self.pin_button.pack(side="right")
+        self.terminal_button = tk.Button(self.detail_actions,text=self.t("focus_terminal"),
                                          command=app.focus_selected_terminal,bg=CARD,fg=MINT,
                                          activebackground=BORDER,activeforeground=TEXT,relief="flat",
                                          bd=0,padx=8,pady=3,font=("Segoe UI",9),cursor="hand2",takefocus=True)
-        self.terminal_button.pack(anchor="w",pady=(0,4))
+        self.terminal_button.pack(side="left")
         self.choose_terminal_button = tk.Button(self.detail_frame,text=self.t("choose_terminal"),
                                                command=app.open_terminal_picker,bg=BG,fg=MINT,
                                                activebackground=CARD,activeforeground=TEXT,relief="flat",
@@ -177,6 +184,7 @@ class HoverTray:
             ("back", "←  "+self.t("back_sessions"), app.close_menu),
             ("pets", self.t("choose_pet"), app.open_pet_picker),
             ("language", self.t("language"), app.open_language_picker),
+            ("companion", self.t("companion_settings"), app.open_companion_settings),
             ("sound", self.t("sound"), app.toggle_sound),
             ("topmost", self.t("topmost"), app.toggle_topmost),
             ("focus", self.t("keyboard"), app.focus_panel),
@@ -228,6 +236,43 @@ class HoverTray:
             button.pack(fill="x",pady=1)
             self.language_buttons[code] = button
 
+        self.companion_frame=tk.Canvas(self.window,bg=BG,highlightthickness=0)
+        self.companion_content=tk.Frame(self.companion_frame,bg=BG,padx=8,pady=5)
+        self.companion_window=self.companion_frame.create_window(0,0,anchor="nw",window=self.companion_content)
+        self.companion_scroll=ttk.Scrollbar(self.companion_frame,orient="vertical",command=self.companion_frame.yview,style="codumi.Vertical.TScrollbar")
+        self.companion_frame.configure(yscrollcommand=self.companion_scroll.set)
+        self.companion_scroll.place(relx=1,x=-6,y=0,width=6,relheight=1)
+        self.companion_content.bind("<Configure>",lambda _:self.companion_frame.configure(scrollregion=self.companion_frame.bbox("all")))
+        self.companion_frame.bind("<Configure>",lambda e:self.companion_frame.itemconfigure(self.companion_window,width=e.width-10))
+        self.companion_buttons={}
+        for key,command in [("back",app.close_menu),("focus",app.toggle_focus),
+                            ("complete",lambda:app.toggle_alert("complete")),
+                            ("error",lambda:app.toggle_alert("error")),
+                            ("waiting",lambda:app.toggle_alert("waiting")),("hotkey",app.cycle_hotkey)]:
+            button=tk.Button(self.companion_content,command=command,bg=BG,fg=TEXT,
+                             activebackground=CARD,activeforeground=MINT,relief="flat",anchor="w",
+                             font=("Segoe UI",9),padx=6,pady=4,cursor="hand2")
+            button.pack(fill="x",pady=1)
+            self.companion_buttons[key]=button
+        self.hotkey_notice=tk.Label(self.companion_content,bg=BG,fg=COLORS["waiting"],
+                                   wraplength=270,justify="left",font=("Segoe UI",8))
+        self.hotkey_notice.pack(fill="x")
+        self.summary=tk.Label(self.companion_content,bg=BG,fg=MUTED,justify="left",anchor="nw",
+                              wraplength=270,font=("Segoe UI",9))
+        self.summary.pack(fill="x",pady=(12,0))
+        def scroll_companion(event):
+            self.companion_frame.yview_scroll(-int(event.delta/120),"units")
+            return "break"
+        for widget in [self.companion_frame,self.companion_content,self.summary,self.hotkey_notice,*self.companion_buttons.values()]:
+            widget.bind("<MouseWheel>",scroll_companion)
+        def reveal(button):
+            self.companion_frame.update_idletasks()
+            top=self.companion_frame.canvasy(0)
+            if button.winfo_y()<top or button.winfo_y()+button.winfo_height()>top+self.companion_frame.winfo_height():
+                self.companion_frame.yview_moveto(button.winfo_y()/max(1,self.companion_content.winfo_height()))
+        for button in self.companion_buttons.values():
+            button.bind("<FocusIn>",lambda _,b=button:reveal(b))
+
         self.terminal_frame = tk.Frame(self.window,bg=BG,padx=8,pady=5)
         tk.Button(self.terminal_frame,text="←  "+self.t("back"),command=app.close_menu,
                   bg=BG,fg=TEXT,activebackground=CARD,activeforeground=MINT,relief="flat",
@@ -262,7 +307,7 @@ class HoverTray:
         if self.filter_active:
             items = [s for s in items if s.display_state() not in {"idle", "sleeping"}]
         rank = {"working": 0, "thinking": 1, "waiting": 2, "error": 3, "compacting": 4, "idle": 5, "sleeping": 6}
-        return sorted(items, key=lambda s: (rank.get(s.display_state(), 5), -s.updated))
+        return sorted(items, key=lambda s: (project_id(s) not in self.app.favorites,rank.get(s.display_state(), 5), -s.updated))
 
     def layout(self):
         p = self.placement
@@ -289,16 +334,19 @@ class HoverTray:
             self.filter_button.place_forget()
             self.activity_button.place_forget()
             self.settings_frame.place_forget()
+            self.companion_frame.place_forget()
             self.pet_frame.place_forget()
             self.language_frame.place_forget()
             self.terminal_frame.place_forget()
-            frame = (self.terminal_frame if self.app.terminal_picker_open else
+            frame = (self.companion_frame if self.app.companion_open else
+                     self.terminal_frame if self.app.terminal_picker_open else
                      self.pet_frame if self.app.pet_picker_open else
                      self.language_frame if self.app.language_picker_open else self.settings_frame)
             frame.place(x=origin+20,y=91,width=card_width-40,height=h-168)
-            frame.lift()
+            tk.Misc.lift(frame)
         else:
             self.settings_frame.place_forget()
+            self.companion_frame.place_forget()
             self.pet_frame.place_forget()
             self.language_frame.place_forget()
             self.terminal_frame.place_forget()
@@ -348,6 +396,13 @@ class HoverTray:
                            anchor="w", fill=COLORS["error"], font=("Segoe UI", 8))
 
     def refresh(self):
+        self.companion_buttons["back"].configure(text="←  "+self.t("back"))
+        self.companion_buttons["focus"].configure(text=self.t("focus_end") if self.app.focus_until>time.time() else self.t("focus_start"))
+        for kind in ("complete","error","waiting"):
+            self.companion_buttons[kind].configure(text=self.t("alert_"+kind)+" · "+self.t("enabled" if self.app.alerts[kind] else "disabled"))
+        self.companion_buttons["hotkey"].configure(text=self.t("hotkey_choice",name=self.t("disabled") if self.app.hotkey_name=="Off" else self.app.hotkey_name)+"  ↻")
+        self.hotkey_notice.configure(text=self.t("hotkey_unavailable") if self.app.hotkey_failed else "")
+        self.summary.configure(text=self.app.usage_summary())
         name = self.t("automatic") if self.app.language=="auto" else LANGUAGE_NAMES[self.app.language]
         self.settings_buttons["language"].configure(text=self.t("language_choice",name=name)+"  →")
         for code,button in self.language_buttons.items():
@@ -384,6 +439,7 @@ class HoverTray:
                                    font=("Segoe UI", 10), cursor="hand2",
                                    command=lambda key=s.key: self.app.select_session(key))
                 button.pack(side="left", fill="x", expand=True)
+                button.bind("<Button-3>", lambda _, key=s.key:self.app.toggle_favorite(key))
                 button.bind("<MouseWheel>", self.scroll)
                 button.bind("<Enter>", lambda _, key=s.key: setattr(self, "hovered", key))
                 button.bind("<Leave>", lambda _: setattr(self, "hovered", None))
@@ -394,7 +450,7 @@ class HoverTray:
             state = s.display_state()
             usage = ("≥" if s.tokens_partial else "")+compact_tokens(s.tokens)
             suffix = "  ·  "+self.t("tokens_short",count=usage) if s.tokens else ""
-            button.configure(text=f"{self.app.project_name(s)[:26]}\n{s.provider}  ·  {self.t.state(state)}{suffix}",
+            button.configure(text=f"{'★ ' if project_id(s) in self.app.favorites else ''}{self.app.project_name(s)[:26]}\n{s.provider}  ·  {self.t.state(state)}{suffix}",
                              wraplength=max(100,(self.placement["width"] if self.placement else 364)-114),
                              fg=MUTED if state in {"idle", "sleeping"} else TEXT)
             marker.configure(bg=COLORS[state])
@@ -406,6 +462,9 @@ class HoverTray:
                                  else self.t("no_sessions"))
             self.empty.place(x=(24 if p["side"] == "left" else 36), y=150, width=p["width"]-60, height=90)
         session = self.app.current_session()
+        self.pin_button.configure(text=self.t("unfavorite" if session and project_id(session) in self.app.favorites else "favorite"))
+        self.terminal_button.configure(text=self.t("focus_cursor" if session and session.provider=="Cursor" else "focus_terminal"))
+        self.choose_terminal_button.configure(text=self.t("choose_window" if session and session.provider=="Cursor" else "choose_terminal"))
         self.terminal_button.configure(state="normal" if session and self.app.terminal_pending is None else "disabled")
         self.terminal_notice.configure(text=self.t(self.app.terminal_status) if self.app.terminal_status else "")
         duration = max(0, int(time.time() - session.started)) if session else 0
@@ -462,13 +521,39 @@ class App:
         self.language = choice if isinstance(choice,str) and choice in {"auto",*LANGUAGE_NAMES} else "auto"
         self.t = Translator(None if self.language=="auto" else self.language)
         self.topmost = self.preferences.get("topmost", True) is not False
+        self.demo=demo
+        favorites=self.preferences.get("favorites",[])
+        self.favorites={v for v in favorites if isinstance(v,str) and len(v)==64} if isinstance(favorites,list) else set()
+        self.restored_selection=self.preferences.get("selected")
+        if not isinstance(self.restored_selection,str): self.restored_selection=None
+        alerts=self.preferences.get("alerts",{})
+        self.alerts={k:alerts.get(k,True) is not False for k in ("complete","error","waiting")} if isinstance(alerts,dict) else dict.fromkeys(("complete","error","waiting"),True)
+        focus=self.preferences.get("focus_until",0)
+        self.focus_until=focus if type(focus) in (int,float) and time.time()<focus<time.time()+86400 else 0
+        self.activity=Activity(self.preferences.get("activity"))
+        profiles=self.preferences.get("window_profiles",{})
+        self.window_profiles=profiles if isinstance(profiles,dict) else {}
+        self.companion_open=False
+        self.toast=None
+        self.toast_timer=None
+        self.toast_queue=[]
+        self.hotkey=desktop.GlobalHotkey()
+        self.hotkey_name=self.preferences.get("hotkey","Ctrl+Alt+N")
+        if self.hotkey_name not in HOTKEYS: self.hotkey_name="Ctrl+Alt+N"
+        self.hotkey_failed=False
+        if not demo: self.hotkey_failed=not self.hotkey.set(self.hotkey_name)
+        self.last_preferences=None
         self.sound = self.preferences.get("sound") is True
         self.root = tk.Tk()
         self.root.title(APP_NAME+" — "+self.t("tagline"))
         overlay_window(self.root, self.topmost)
         self.canvas = tk.Canvas(self.root, width=64, height=64, bg=KEY, highlightthickness=0, cursor="hand2")
         self.canvas.pack()
+        self.pet_tooltip=Tooltip(self.canvas,"",self)
         self.pet = PetAvatar(self.canvas,self.preferences.get("pet_kind","notchi"))
+        self.completion_star=self.canvas.create_text(52,13,text="★",fill=MINT,font=("Segoe UI",12),state="hidden",tags="completion_badge")
+        self.other_dot=self.canvas.create_oval(44,44,54,54,fill=MINT,outline=BG,state="hidden",tags="other_activity")
+        self.other_count=self.canvas.create_text(49,49,text="",fill=BG,font=("Segoe UI",7,"bold"),state="hidden",tags="other_activity")
         self.sessions, self.selected, self.warning = [], None, ""
         self.stopping = threading.Event()
         self.updates = queue.Queue(maxsize=1)
@@ -529,7 +614,7 @@ class App:
         return desktop.work_area(self.root, getattr(self,"pet_x",None), getattr(self,"pet_y",None))
 
     def position_tray(self):
-        p = desktop.tray_placement(self.pet_x,self.pet_y,self.work_area(),self.tray.details)
+        p = desktop.tray_placement(self.pet_x,self.pet_y,self.work_area(),self.tray.details or self.menu_open)
         if (p["pet_x"],p["pet_y"]) != (self.pet_x,self.pet_y):
             self.pet_x,self.pet_y = p["pet_x"],p["pet_y"]
             desktop.place(self.root,self.pet_x,self.pet_y,64,64)
@@ -607,6 +692,13 @@ class App:
             return
         now = time.monotonic()
         self.check_terminal_result()
+        if self.hotkey.pressed():
+            if self.tray_visible: self.dismiss_tray()
+            else:
+                self.drag_suppressed=False
+                self.show_tray()
+                self.leave_at=None
+                self.suppress_until=time.monotonic()+1.2
         if now-self.last_motion_check > 3:
             self.reduced = desktop.reduced_motion()
             self.last_motion_check = now
@@ -621,7 +713,15 @@ class App:
         session = self.current_session()
         state = session.display_state() if session else "sleeping"
         self.pet.update(state,now)
-        self.pet.draw(now,session.provider if session else "Codex",self.reduced)
+        focused=self.focus_until>time.time()
+        self.pet.draw(now,session.provider if session else "Codex",self.reduced or focused)
+        self.canvas.itemconfigure(self.completion_star,state="normal" if self.activity.badge else "hidden")
+        self.canvas.tag_raise(self.completion_star)
+        others=sum(s.key!=self.selected and s.display_state() in {"working","thinking","compacting"} for s in self.sessions)
+        visible=bool(session and session.display_state() in {"idle","sleeping"} and others)
+        self.canvas.itemconfigure(self.other_dot,state="normal" if visible else "hidden")
+        self.canvas.itemconfigure(self.other_count,state="normal" if visible else "hidden",text=str(others))
+        self.canvas.tag_raise("other_activity")
         if self.tray_visible:
             p = self.tray.placement
             alpha = max(0,min(1,self.spring.value))
@@ -638,7 +738,7 @@ class App:
                 self.close_menu()
         active = (state in {"working","thinking","compacting"} or now < self.pet.completed_until or now < self.pet.jump_until or self.pet.reacting(now)
                   or (state == "error" and now-self.pet.changed < .6))
-        interval = 16 if moving else (250 if self.reduced else (33 if active else 120))
+        interval = 16 if moving else (250 if self.reduced or focused else (33 if active else 120))
         self.animation_id = self.root.after(interval,self.animate)
 
     def watch(self):
@@ -663,7 +763,25 @@ class App:
                 self.sessions = sessions
         except queue.Empty:
             pass
+        if self.restored_selection and self.sessions:
+            if any(session.key==self.restored_selection for session in self.sessions): self.selected=self.restored_selection
+            self.restored_selection=None
+        self.activity.update(self.sessions)
+        pending,self.activity.ready=self.activity.ready,[]
+        for kind,key,project in pending:
+            if self.alerts.get(kind) and self.focus_until<=time.time():
+                self.toast_queue.append((kind,key,project))
+        if self.focus_until and self.focus_until<=time.time(): self.focus_until=0
+        self.show_next_notice()
         self.tray.refresh()
+        session=self.current_session()
+        tip=(self.project_name(session)+" · "+session.provider+" · "+self.t.state(session.display_state())) if session else self.t("no_selection")
+        others=sum(s.key!=self.selected and s.display_state() in {"working","thinking","compacting"} for s in self.sessions)
+        if others: tip+="\n"+self.t("other_working",count=others)
+        if self.focus_until>time.time(): tip+="\n"+self.t("focus_remaining",minutes=max(1,int((self.focus_until-time.time())/60)+1))
+        if self.activity.badge: tip+="\n"+self.t("completion_tip")
+        self.pet_tooltip.text=tip
+        self.save_preferences()
         now = time.monotonic()
         for session in self.sessions:
             completed = session.completed
@@ -671,7 +789,7 @@ class App:
             if completed > previous and time.time()-completed < 8:
                 if session.key == self.selected:
                     self.pet.celebrate(now)
-                if self.sound:
+                if self.sound and self.focus_until<=time.time():
                     self.root.bell()
             self.completions[session.key] = completed
         self.completions = {s.key:self.completions[s.key] for s in self.sessions}
@@ -680,7 +798,7 @@ class App:
         self.refresh_id = self.root.after(1000,self.refresh)
 
     def project_name(self,session):
-        return session.project if session.cwd else self.t("local_session")
+        return session.project if session.cwd or session.project_hint else self.t("local_session")
 
     def current_session(self):
         return next((s for s in self.sessions if s.key==self.selected),None)
@@ -694,6 +812,8 @@ class App:
             return
         details = key!=self.selected or not self.tray.details
         self.selected = key
+        self.restored_selection=None
+        if self.activity.badge and self.activity.badge[0]==key: self.activity.badge=None
         self.terminal_pending = self.terminal_requested = None
         self.terminal_status = ""
         self.close_menu()
@@ -708,6 +828,8 @@ class App:
             return
         self.terminal_requested = session.key
         target = self.terminal_bindings.get(session.key)
+        if not target:
+            target=terminal.restore_window(self.window_profiles.get(project_id(session)))
         if target and terminal.valid_target(target):
             self.terminal_pending = None
             if terminal.focus_terminal(target):
@@ -720,6 +842,9 @@ class App:
             self.tray.refresh()
             return
         self.terminal_bindings.pop(session.key,None)
+        if session.provider=="Cursor":
+            self.open_terminal_picker()
+            return
         if self.terminal_pending is not None:
             return
         self.terminal_pending = session.key
@@ -763,7 +888,8 @@ class App:
         self.terminal_pending = self.terminal_requested = None
         self.terminal_choices = terminal.available_terminals()
         self.menu_open = self.terminal_picker_open = True
-        self.pet_picker_open = self.language_picker_open = False
+        self.pet_picker_open = self.language_picker_open = self.companion_open = False
+        self.position_tray()
         self.tray.terminal_list.delete(0,"end")
         for title,_ in self.terminal_choices:
             self.tray.terminal_list.insert("end",title)
@@ -780,7 +906,16 @@ class App:
         session = self.current_session()
         if not selection or not session or selection[0]>=len(self.terminal_choices):
             return
-        self.terminal_bindings[session.key] = self.terminal_choices[selection[0]][1]
+        target=self.terminal_choices[selection[0]][1]
+        if not terminal.valid_target(target):
+            self.terminal_status="terminal_missing"
+            self.close_menu()
+            self.tray.refresh()
+            return
+        self.terminal_bindings[session.key] = target
+        profile=terminal.window_profile(target)
+        if profile: self.window_profiles[project_id(session)]=profile
+        self.save_preferences()
         self.terminal_pending = None
         self.terminal_requested = session.key
         self.close_menu()
@@ -816,6 +951,12 @@ class App:
             self.suppress_until = time.monotonic()+.3
             self.save_preferences()
         else:
+            if self.activity.badge:
+                x,y=self.root.winfo_pointerxy()
+                if x-self.pet_x>=43 and y-self.pet_y<=23:
+                    key=self.activity.badge[0]
+                    self.select_session(key)
+                    return
             self.pet.click(time.monotonic())
             self.show_tray()
 
@@ -828,8 +969,8 @@ class App:
             desktop.prepare(self.tray.window,self.topmost)
 
     def open_menu(self):
-        if self.pet_picker_open or self.language_picker_open or self.terminal_picker_open:
-            self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = False
+        if self.pet_picker_open or self.language_picker_open or self.terminal_picker_open or self.companion_open:
+            self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = self.companion_open = False
             self.tray.layout()
             return
         if self.menu_open:
@@ -837,20 +978,23 @@ class App:
             return
         self.show_tray()
         self.menu_open = True
+        self.position_tray()
         self.tray.layout()
         self.tray.refresh()
 
     def open_pet_picker(self):
         self.show_tray()
         self.menu_open = self.pet_picker_open = True
-        self.language_picker_open = self.terminal_picker_open = False
+        self.language_picker_open = self.terminal_picker_open = self.companion_open = False
+        self.position_tray()
         self.tray.layout()
         self.tray.refresh()
 
     def open_language_picker(self):
         self.show_tray()
         self.menu_open = self.language_picker_open = True
-        self.pet_picker_open = self.terminal_picker_open = False
+        self.pet_picker_open = self.terminal_picker_open = self.companion_open = False
+        self.position_tray()
         self.tray.layout()
         self.tray.refresh()
 
@@ -859,6 +1003,8 @@ class App:
             return False
         if language==self.language:
             return True
+        self.dismiss_notice()
+        self.toast_queue.clear()
         self.language = language
         self.t = Translator(None if language=="auto" else language)
         self.root.title(APP_NAME+" — "+self.t("tagline"))
@@ -886,13 +1032,14 @@ class App:
         return True
 
     def close_menu(self):
-        self.menu_open = self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = False
+        self.menu_open = self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = self.companion_open = False
+        self.tray.companion_frame.place_forget()
         self.tray.terminal_frame.place_forget()
         self.tray.language_frame.place_forget()
         self.tray.settings_frame.place_forget()
         self.tray.pet_frame.place_forget()
         if self.tray.placement:
-            self.tray.layout()
+            self.position_tray()
 
     def focus_panel(self):
         self.close_menu()
@@ -918,12 +1065,103 @@ class App:
             self.position_tray()
         self.save_preferences()
 
+    def toggle_favorite(self,key=None):
+        session=next((s for s in self.sessions if s.key==(key or self.selected)),None)
+        if not session: return
+        identity=project_id(session)
+        if identity in self.favorites: self.favorites.remove(identity)
+        else: self.favorites.add(identity)
+        self.save_preferences()
+        self.tray.refresh()
+
+    def open_companion_settings(self):
+        self.menu_open=self.companion_open=True
+        self.pet_picker_open=self.language_picker_open=self.terminal_picker_open=False
+        self.show_tray()
+        self.position_tray()
+        self.tray.refresh()
+
+    def toggle_focus(self):
+        self.focus_until=0 if self.focus_until>time.time() else time.time()+25*60
+        self.toast_queue.clear()
+        self.dismiss_notice()
+        self.save_preferences()
+        self.tray.refresh()
+
+    def toggle_alert(self,kind):
+        if kind not in self.alerts: return
+        self.alerts[kind]=not self.alerts[kind]
+        self.save_preferences()
+        self.tray.refresh()
+
+    def cycle_hotkey(self):
+        self.hotkey_name=HOTKEYS[(HOTKEYS.index(self.hotkey_name)+1)%len(HOTKEYS)]
+        self.hotkey_failed=not self.hotkey.set(self.hotkey_name)
+        self.save_preferences()
+        self.tray.refresh()
+
+    def usage_summary(self):
+        session=self.current_session()
+        totals=self.activity.today()
+        def breakdown(values,key):
+            if not any(values): return self.t("usage_unknown")
+            return self.t(key,**dict(zip(("input","output","write","read"),(compact_tokens(v) for v in values))))
+        count=("≥" if session and session.tokens_partial else "")+compact_tokens(session.tokens) if session and session.tokens else self.t("usage_unknown")
+        return (self.t("summary_title")+"\n\n"+self.t("summary_session",count=count)+"\n"+
+                (breakdown(session.usage,"usage_breakdown") if session else self.t("usage_unknown"))+"\n\n"+
+                self.t("summary_today",count=compact_tokens(totals[0]))+"\n"+
+                breakdown(totals[1:],"usage_daily_breakdown")+"\n\n"+self.t("summary_note"))
+
+    def dismiss_notice(self):
+        if self.toast_timer:
+            self.root.after_cancel(self.toast_timer)
+            self.toast_timer=None
+        if self.toast:
+            self.toast.destroy()
+            self.toast=None
+
+    def show_next_notice(self):
+        if self.toast or not self.toast_queue or self.closed: return
+        if self.focus_until>time.time():
+            self.toast_queue.clear()
+            return
+        self.toast_queue=self.toast_queue[-16:]
+        kind,key,project=self.toast_queue.pop(0)
+        if not self.alerts.get(kind): return
+        window=self.toast=tk.Toplevel(self.root)
+        overlay_window(window,True)
+        area=self.work_area()
+        width=min(300,area[2]-area[0]-24)
+        x=max(area[0]+12,min(self.pet_x+64-width,area[2]-width-12))
+        y=self.pet_y+76
+        if y+80>area[3]-12: y=max(area[1]+12,self.pet_y-92)
+        def open_session():
+            self.dismiss_notice()
+            self.select_session(key)
+        body=tk.Button(window,text=self.t("alert_"+kind)+"\n"+project[:40],command=open_session,
+                       bg=BG,fg=TEXT,activebackground=CARD,activeforeground=MINT,
+                       anchor="w",justify="left",relief="flat",bd=0,padx=12,pady=10,
+                       font=("Segoe UI",10),wraplength=width-52,cursor="hand2")
+        body.place(x=0,y=0,width=width-30,height=80)
+        tk.Button(window,text="×",command=self.dismiss_notice,bg=BG,fg=MUTED,relief="flat",
+                  bd=0,font=("Segoe UI",11),cursor="hand2").place(x=width-30,y=0,width=30,height=80)
+        window.configure(bg=BG)
+        window.deiconify()
+        desktop.place(window,x,y,width,80)
+        self.toast_timer=self.root.after(5000,self.dismiss_notice)
+
     def save_preferences(self):
-        data = {"pet":[self.pet_x,self.pet_y],"sound":self.sound,"topmost":self.topmost,"pet_kind":self.pet.pet_id,"language":self.language}
+        data = {"pet":[self.pet_x,self.pet_y],"sound":self.sound,"topmost":self.topmost,"pet_kind":self.pet.pet_id,"language":self.language,
+                "favorites":sorted(self.favorites),"selected":self.selected or self.restored_selection,
+                "alerts":self.alerts,"focus_until":self.focus_until,"hotkey":self.hotkey_name,
+                "window_profiles":self.window_profiles,"activity":self.activity.days}
+        serialized=json.dumps(data)
+        if serialized==self.last_preferences: return
         temporary = self.preferences_path.with_suffix(".tmp")
         try:
-            temporary.write_text(json.dumps(data),encoding="utf-8")
+            temporary.write_text(serialized,encoding="utf-8")
             temporary.replace(self.preferences_path)
+            self.last_preferences=serialized
         except OSError:
             logging.warning("Não foi possível salvar as preferências.")
 
@@ -933,6 +1171,10 @@ class App:
                 self.finish_close()
             return
         self.closed = True
+        self.hotkey.close()
+        self.pet_tooltip.hide()
+        self.dismiss_notice()
+        self.toast_queue.clear()
         self.save_preferences()
         self.stopping.set()
         for timer in (self.refresh_id,self.hover_id,self.animation_id):
