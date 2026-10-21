@@ -15,7 +15,7 @@ And a small celebration when the work is done.
 [**Adopt your codumi →**](https://github.com/hlatki01/codumi/releases/latest)<br>
 [Meet the pets](#pick-your-deskmate) · [Get started](#from-download-to-deskmate) · [Contribute](#theres-room-for-one-more)
 
-<img src="docs/images/codumi-demo.gif" alt="The real codumi interface: a hover reveals agent sessions, the pet works and celebrates, then returns to rest." width="640">
+<img src="docs/images/codumi-demo.gif" alt="codumi v0.3.3 in action: sessions, attention queue, project pets and voices, completion history, presentation mode, updates, and an actionable speech bubble." width="640">
 
 <sub>Actual Windows UI. Fictional sessions. Very real little companion.</sub>
 
@@ -81,9 +81,9 @@ The pet can show working, thinking, waiting, ready, resting, error, and context 
 
 **Want the original terminal?** Select a session and click **Focus terminal**. If discovery is ambiguous, use **Activity → Choose terminal window… → Use this window**. Windows may refuse activation, and selecting a particular terminal tab or pane is not automated. See the technical notes below.
 
-## Coming in v0.3: attention when it matters
+## New in v0.3: attention when it matters
 
-This section describes the next release under review. The latest published download remains available above.
+Available now in the latest release. A little more help, still tucked into the same tiny bubble.
 
 | A new little habit | What it does |
 | --- | --- |
@@ -100,11 +100,38 @@ Open **Settings → Companion & activity → Attention, history & projects**. Us
 
 History is off by default. **Disable and clear history** removes the current history; rollback folders and backups retain their own copies of preferences. Presentation mode is remembered between restarts and suppresses notices; it does not redact a terminal, editor, or another application's screen share.
 
+### A closer look
+
+Actual v0.3.3 Windows screens, using fictional projects and temporary demo settings.
+
+<table width="100%" align="center">
+  <tr>
+    <th width="50%">Your next move, in one place</th>
+    <th width="50%">A different companion for each project</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/codumi-attention.png" alt="Attention queue with a Cursor error and a Codex session waiting for input, each with open-session and focus-window actions" width="420"></td>
+    <td align="center"><img src="docs/images/codumi-project-settings.png" alt="Project settings for orbit: Fox pet, playful voice, inherited notice settings, and edge tucking enabled" width="420"></td>
+  </tr>
+  <tr>
+    <th>A little memory for finished work</th>
+    <th>Share your screen, keep your context private</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/codumi-history.png" alt="Optional local completion history showing fictional Claude, Codex, and Cursor projects with timestamps and session actions" width="420"></td>
+    <td align="center"><img src="docs/images/codumi-presentation.png" alt="Presentation mode replacing project names with Private project and hiding private session content in codumi" width="420"></td>
+  </tr>
+</table>
+
 ### Updates, with a way back
 
 codumi checks the public `hlatki01/codumi` release endpoints 30 seconds after startup and every six hours. Demo mode never checks automatically. A newer version adds an update button to the tray footer; connection failures stay quiet and checks pause while downloading or holding a staged package. Downloads and installation require your click. No session data or credentials are sent. Downloads use HTTPS and require the published SHA-256 checksum. Archive paths, file counts, expanded size, symlinks, duplicate names, and staged-file changes are checked before installation. Checksums verify download integrity; the executable remains unsigned.
 
 Installation waits for the current codumi process to exit, copies the latest preferences into the verified build, and starts that build from a separate versioned folder in the local `updates` area. The existing installation stays available for rollback. Repeated updates reuse the same area instead of nesting versions indefinitely. Use **Open app folder** in the new build to locate its launcher; existing shortcuts keep their original destination. Keep the updates area with the application, since it contains the downloaded builds.
+
+<p align="center">
+  <img src="docs/images/codumi-updates.png" alt="codumi v0.3.3 Updates page showing the installed version, check for updates, explicit download and restart controls, and rollback information" width="520">
+</p>
 
 ## New in v0.2: a companion with a memory
 
@@ -123,10 +150,10 @@ Find notices, concentration, shortcuts, and token summaries in **Settings → Co
 
 ### A little voice, a little closer
 
-In [v0.2.2](https://github.com/hlatki01/codumi/releases/tag/v0.2.2), your companion speaks through a chat bubble above and to its left, with a slanted tail pointing back toward the pet. Click the message to open the session it is talking about.
+Your companion speaks through a chat bubble above and to its left, with a slanted tail pointing back toward the pet. Open the session, focus its associated window, or mute that project directly from the bubble. Its voice can be direct, friendly, or playful.
 
 <p align="center">
-  <img src="docs/images/codumi-speech-bubble.png" alt="codumi v0.2.2 on Windows saying I finished the task in projetos, in a chat bubble above and to the left of its pet" width="480">
+  <img src="docs/images/codumi-speech-bubble.png" alt="The Fox pet celebrating a completed orbit task in a speech bubble with Open session, Focus window, and Mute project buttons" width="480">
 </p>
 
 ### Cursor, meet codumi
