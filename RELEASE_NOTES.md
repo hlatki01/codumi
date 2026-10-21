@@ -1,6 +1,10 @@
-# codumi v0.3.0 — Attention when it matters (release candidate)
+# codumi v0.3.1 - Try the updater
 
-This version is proposed in a pull request; it is not a published stable release yet.
+A small follow-up to the local v0.3.0 build: the tray header now shows v0.3.1 so you can confirm an update visually.
+
+This release is built from PR #2, which remains open; it includes the companion workflow changes listed below. It is published on the stable update channel so the existing manual updater can discover it.
+
+To test from v0.3.0: Settings > Companion & activity > Attention, history & projects > Updates. Check, download, then install. Preferences are preserved and the previous folder remains available for rollback.
 
 ## New
 

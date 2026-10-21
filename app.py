@@ -388,6 +388,7 @@ class HoverTray:
         c.create_text(origin+39, 41, text="c", fill=MINT, font=("Segoe UI", 20, "bold"))
         c.create_text(origin+70, 34, text=APP_NAME, fill=TEXT, anchor="w", font=("Segoe UI", 16, "bold"))
         c.create_oval(origin+153,30,origin+159,36,fill=MINT,outline="")
+        c.create_text(origin+170, 34, text="v"+VERSION, fill=MUTED, anchor="w", font=("Segoe UI", 8))
         c.create_text(origin+70, 57, text=self.t("tagline"), fill=MUTED, anchor="w", font=("Segoe UI", 9))
         c.create_line(origin+23, 80, end-23, 80, fill=BORDER)
         c.create_text(origin+24, 106, text=self.t("settings") if self.app.menu_open else self.t("recent_sessions"), anchor="w", fill=MUTED, font=("Segoe UI", 9))

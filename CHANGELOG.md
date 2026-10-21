@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## v0.3.1 - Update verification
+
+- Show the installed version beside the codumi name in the tray header.
+- Publish a portable update to exercise the v0.3.0 download and restart flow.
+- Includes the v0.3 companion workflow changes below; main remains unchanged.
+
 ## v0.3.0 — Attention when it matters (unreleased)
 
 - Live attention queue with explicit session and window actions.
