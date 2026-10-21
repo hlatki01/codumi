@@ -94,7 +94,7 @@ This section describes the next release under review. The latest published downl
 | **A smaller footprint** | Enable edge tucking: a pet near a side edge retracts to a visible slice after being left alone. Hover brings it back. Its saved position stays unchanged. |
 | **A presentation switch** | **Ctrl+Alt+P**, or the settings button, hides project names, prompts, activity text, and notices inside codumi. Other applications are outside its scope. |
 | **Three ways to speak** | Choose direct, friendly, or playful messages globally or per project. All are local templates in six languages, triggered by actual recorded events. |
-| **A helping hand with updates** | Manually check GitHub, read the changes, download and verify the package, then restart into the new portable build with your preferences. |
+| **A helping hand with updates** | Check GitHub automatically, read the changes, explicitly download and verify the package, then restart into the new portable build with your preferences. |
 
 Open **Settings → Companion & activity → Attention, history & projects**. Use the selector to switch between the attention queue, completions, project settings, and updates. All four pages scroll and support keyboard access.
 
@@ -102,7 +102,7 @@ History is off by default. **Disable and clear history** removes the current his
 
 ### Updates, with a way back
 
-Updates contact only the public `hlatki01/codumi` release endpoints when you request a check or download. No session data or credentials are sent. Downloads use HTTPS and require the published SHA-256 checksum. Archive paths, file counts, expanded size, symlinks, duplicate names, and staged-file changes are checked before installation. Checksums verify download integrity; the executable remains unsigned.
+codumi checks the public `hlatki01/codumi` release endpoints 30 seconds after startup and every six hours. Demo mode never checks automatically. A newer version adds an update button to the tray footer; connection failures stay quiet and checks pause while downloading or holding a staged package. Downloads and installation require your click. No session data or credentials are sent. Downloads use HTTPS and require the published SHA-256 checksum. Archive paths, file counts, expanded size, symlinks, duplicate names, and staged-file changes are checked before installation. Checksums verify download integrity; the executable remains unsigned.
 
 Installation waits for the current codumi process to exit, copies the latest preferences into the verified build, and starts that build from a separate versioned folder in the local `updates` area. The existing installation stays available for rollback. Repeated updates reuse the same area instead of nesting versions indefinitely. Use **Open app folder** in the new build to locate its launcher; existing shortcuts keep their original destination. Keep the updates area with the application, since it contains the downloaded builds.
 
@@ -293,7 +293,7 @@ The ZIP includes source, licenses, documentation, and a local Python/Tcl/Tk runt
 | `desktop.py` | Win32 behavior, monitor geometry, input regions, and spring motion |
 | `sessions.py` | Read-only Claude/Codex/Cursor transcript adapters |
 | `companion.py` | Project identities, overrides, completion history, observed usage, and notification deduplication |
-| `updater.py` | Manual release checks, verified staging, preference transfer, and restart helper |
+| `updater.py` | Periodic and manual release checks, verified staging, preference transfer, and restart helper |
 | `terminal.py` | Terminal discovery, identity checks, and focus requests |
 | `i18n.py`, `locales.json` | Windows language detection and translations |
 | `Launcher.cs`, `build.py` | Windows launcher and portable packaging |

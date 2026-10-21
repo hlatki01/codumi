@@ -1,4 +1,4 @@
-"""Opt-in GitHub update checks and verified staging; never overwrite a running app."""
+"""GitHub release checks and opt-in verified staging; never overwrite a running app."""
 from pathlib import Path, PurePosixPath
 import hashlib
 import json

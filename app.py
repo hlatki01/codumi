@@ -126,7 +126,7 @@ class HoverTray:
         self.activity_button = self.button(self.t("activity")+"  →", app.toggle_details, MINT, 9)
         Tooltip(self.menu_button, self.t("menu_tip"), app)
         Tooltip(self.filter_button, self.t("filter_tip"), app)
-        Tooltip(self.activity_button, self.t("activity_tip"), app)
+        self.activity_tooltip=Tooltip(self.activity_button, self.t("activity_tip"), app)
         self.session_canvas = tk.Canvas(self.window, bg=BG, highlightthickness=0)
         style = ttk.Style(self.window)
         style.theme_use("clam")
@@ -324,8 +324,7 @@ class HoverTray:
         self.menu_button.place(x=origin+card_width-82, y=22, width=30, height=30)
         self.close_button.place(x=origin+card_width-45, y=22, width=27, height=30)
         self.filter_button.place(x=origin+card_width-105, y=92, width=85, height=28)
-        self.activity_button.configure(text=self.t("collapse")+"  ←" if self.details else self.t("activity")+"  →")
-        self.activity_button.place(x=origin+card_width-119, y=h-46, width=100, height=28)
+        self.layout_update_button()
         list_height = min(222, h - 198)
         self.session_canvas.place(x=origin+20, y=136, width=card_width-49, height=list_height)
         self.session_canvas.itemconfigure(self.session_window, width=card_width-49)
@@ -361,6 +360,20 @@ class HoverTray:
             self.language_frame.place_forget()
             self.terminal_frame.place_forget()
         self.render()
+
+    def layout_update_button(self):
+        p=self.placement
+        if not p: return
+        origin=0 if p["side"]=="left" else 12
+        card_width=p["width"]-12
+        h=p["height"]
+        update_available=bool(self.app.update_info)
+        self.activity_button.configure(
+            text=self.t("update_button",version=self.app.update_info['version']) if update_available else self.t("collapse")+"  \u2190" if self.details else self.t("activity")+"  \u2192",
+            command=lambda:self.app.open_workspace('updates') if self.app.update_info else self.app.toggle_details())
+        self.activity_button.place(x=origin+card_width-143, y=h-46, width=124, height=28)
+        self.activity_tooltip.text=self.t("update_available",version=self.app.update_info['version']) if update_available else self.t("activity_tip")
+        if self.app.menu_open: self.activity_button.place_forget()
 
     def on_scroll(self, first, last):
         self.scrollbar.set(first,last)
@@ -407,6 +420,7 @@ class HoverTray:
                            anchor="w", fill=COLORS["error"], font=("Segoe UI", 8))
 
     def refresh(self):
+        self.layout_update_button()
         self.companion_buttons["back"].configure(text="←  "+self.t("back"))
         self.companion_buttons["focus"].configure(text=self.t("focus_end") if self.app.focus_until>time.time() else self.t("focus_start"))
         for kind in ("complete","error","waiting"):
@@ -709,6 +723,7 @@ class App:
         self.update_info=self.staged_update=None
         self.update_busy=False
         self.update_status="not_checked"
+        self.next_update_check=time.monotonic()+30
         self.toast=None
         self.toast_timer=None
         self.toast_queue=[]
@@ -947,6 +962,7 @@ class App:
             self.stopping.wait(1)
 
     def refresh(self):
+        self.maybe_check_updates()
         try:
             sessions,self.warning = self.updates.get_nowait()
             if sessions is not None:
@@ -1489,21 +1505,29 @@ class App:
             desktop.edge_shape(self.root,target[0]<self.pet_x)
             desktop.place(self.root,*target,64,64)
 
-    def start_update_task(self,kind,work):
+    def maybe_check_updates(self):
+        if (self.demo or self.closed or self.update_busy or self.staged_update or
+            time.monotonic()<self.next_update_check): return
+        self.check_updates(background=True)
+
+    def start_update_task(self,kind,work,background=False):
         if self.update_busy: return
         self.update_busy=True
-        self.update_status={'check':'checking','download':'downloading','install':'verifying'}[kind]
+        if not background:
+            self.update_status={'check':'checking','download':'downloading','install':'verifying'}[kind]
         self.tray.refresh()
         def run():
             try: result=work()
             except Exception:
                 logging.exception('Update task failed')
-                self.update_results.put(('failed',None))
+                self.update_results.put(('auto_failed' if background else 'failed',None))
             else: self.update_results.put((kind,result))
         threading.Thread(target=run,daemon=True,name='update-'+kind).start()
 
-    def check_updates(self):
-        self.start_update_task('check',lambda:updater.check_latest(VERSION))
+    def check_updates(self,background=False):
+        if self.closed or self.update_busy or self.staged_update: return
+        self.next_update_check=time.monotonic()+6*60*60
+        self.start_update_task('check',lambda:updater.check_latest(VERSION),background=background)
 
     def download_update(self):
         if not self.update_info: return
@@ -1519,6 +1543,8 @@ class App:
         try: kind,result=self.update_results.get_nowait()
         except queue.Empty: return
         self.update_busy=False
+        if kind=='auto_failed':
+            return
         if kind=='failed':
             self.update_status='failed'
             self.staged_update=None

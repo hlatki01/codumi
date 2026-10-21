@@ -83,4 +83,61 @@ class WorkflowTests(unittest.TestCase):
         self.assertIsNone(desktop.edge_position(-600,100,area))
 
 
+class PeriodicUpdateTests(unittest.TestCase):
+    def app(self):
+        from app import App
+        from unittest.mock import Mock
+        app=App.__new__(App)
+        app.demo=app.closed=app.update_busy=False
+        app.staged_update=app.update_info=None
+        app.next_update_check=30
+        app.start_update_task=Mock()
+        return app
+
+    def test_waits_until_due_and_schedules_six_hours_after_each_check(self):
+        from unittest.mock import patch
+        app=self.app()
+        with patch('app.time.monotonic',return_value=29): app.maybe_check_updates()
+        app.start_update_task.assert_not_called()
+        with patch('app.time.monotonic',return_value=30): app.maybe_check_updates()
+        self.assertEqual(app.next_update_check,21630)
+        self.assertTrue(app.start_update_task.call_args.kwargs['background'])
+        with patch('app.time.monotonic',return_value=21629): app.maybe_check_updates()
+        self.assertEqual(app.start_update_task.call_count,1)
+        with patch('app.time.monotonic',return_value=21630): app.maybe_check_updates()
+        self.assertEqual(app.start_update_task.call_count,2)
+
+    def test_demo_busy_closed_and_staged_apps_skip_automatic_checks(self):
+        from unittest.mock import patch
+        for name,value in [('demo',True),('closed',True),('update_busy',True),('staged_update',{'root':'verified'})]:
+            with self.subTest(name=name):
+                app=self.app();setattr(app,name,value)
+                with patch('app.time.monotonic',return_value=100): app.maybe_check_updates()
+                app.start_update_task.assert_not_called()
+                self.assertEqual(app.next_update_check,30)
+
+    def test_manual_check_resets_deadline_and_cannot_discard_staged_package(self):
+        from unittest.mock import patch
+        app=self.app()
+        with patch('app.time.monotonic',return_value=500): app.check_updates()
+        self.assertEqual(app.next_update_check,22100)
+        self.assertFalse(app.start_update_task.call_args.kwargs['background'])
+        app.start_update_task.reset_mock();app.staged_update={'root':'verified'}
+        app.check_updates()
+        app.start_update_task.assert_not_called()
+
+    def test_background_failure_preserves_available_update_without_ui_alert(self):
+        import queue
+        from unittest.mock import Mock
+        app=self.app();app.update_busy=True
+        app.update_info={'version':'v9.0.0'};app.update_status='available'
+        app.update_results=queue.Queue();app.update_results.put(('auto_failed',None))
+        app.tray=Mock()
+        app.check_update_results()
+        self.assertFalse(app.update_busy)
+        self.assertEqual(app.update_info,{'version':'v9.0.0'})
+        self.assertEqual(app.update_status,'available')
+        app.tray.refresh.assert_not_called()
+
+
 if __name__=='__main__': unittest.main()

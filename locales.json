@@ -151,7 +151,7 @@
     "update_install": "Install and restart",
     "update_release": "View release on GitHub",
     "update_installed": "Installed: {version}",
-    "update_not_checked": "Updates are checked only when you ask.",
+    "update_not_checked": "New releases are checked automatically after startup and every six hours.",
     "update_checking": "Checking GitHub…",
     "update_current": "You are up to date.",
     "update_available": "Available: {version}",
@@ -161,7 +161,8 @@
     "update_failed": "Could not complete the update. Your current installation is unchanged. Try again.",
     "update_install_failed": "The update could not start. Open codumi from your previous folder; it was kept intact.",
     "update_note": "Manual HTTPS download from hlatki01/codumi. SHA-256 and archive paths are checked. The executable is unsigned. The previous folder remains available for rollback.",
-    "update_folder": "Open app folder"
+    "update_folder": "Open app folder",
+    "update_button": "Update {version}"
   },
   "pt": {
     "tray_title": "Sessões e atividade",
@@ -315,7 +316,7 @@
     "update_install": "Instalar e reiniciar",
     "update_release": "Ver versão no GitHub",
     "update_installed": "Instalado: {version}",
-    "update_not_checked": "Atualizações são buscadas apenas quando você pedir.",
+    "update_not_checked": "Novas versões são buscadas automaticamente após iniciar e a cada seis horas.",
     "update_checking": "Consultando GitHub…",
     "update_current": "Você está atualizado.",
     "update_available": "Disponível: {version}",
@@ -325,7 +326,8 @@
     "update_failed": "Não foi possível concluir. Sua instalação atual não mudou. Tente novamente.",
     "update_install_failed": "A atualização não iniciou. Abra o codumi pela pasta anterior; ela foi preservada.",
     "update_note": "Download manual por HTTPS de hlatki01/codumi. SHA-256 e caminhos do ZIP são verificados. Executável sem assinatura digital. A pasta anterior permite voltar à versão antiga.",
-    "update_folder": "Abrir pasta do app"
+    "update_folder": "Abrir pasta do app",
+    "update_button": "Atualizar {version}"
   },
   "es": {
     "tray_title": "Sesiones y actividad",
@@ -479,7 +481,7 @@
     "update_install": "Instalar y reiniciar",
     "update_release": "Ver versión en GitHub",
     "update_installed": "Instalado: {version}",
-    "update_not_checked": "Solo se buscan actualizaciones cuando lo pides.",
+    "update_not_checked": "Las nuevas versiones se buscan al iniciar y cada seis horas.",
     "update_checking": "Consultando GitHub…",
     "update_current": "Estás al día.",
     "update_available": "Disponible: {version}",
@@ -489,7 +491,8 @@
     "update_failed": "No se pudo completar. La instalación actual no cambió. Reintenta.",
     "update_install_failed": "La actualización no inició. Abre codumi desde la carpeta anterior, que se conservó.",
     "update_note": "Descarga manual por HTTPS de hlatki01/codumi. Se verifica SHA-256 y rutas del ZIP. Ejecutable sin firma. La carpeta anterior permite volver atrás.",
-    "update_folder": "Abrir carpeta de la app"
+    "update_folder": "Abrir carpeta de la app",
+    "update_button": "Actualizar {version}"
   },
   "fr": {
     "tray_title": "Sessions et activité",
@@ -643,7 +646,7 @@
     "update_install": "Installer et redémarrer",
     "update_release": "Voir la version sur GitHub",
     "update_installed": "Installé : {version}",
-    "update_not_checked": "Les mises à jour sont recherchées à votre demande.",
+    "update_not_checked": "Les nouvelles versions sont recherchées au démarrage puis toutes les six heures.",
     "update_checking": "Consultation de GitHub…",
     "update_current": "Vous êtes à jour.",
     "update_available": "Disponible : {version}",
@@ -653,7 +656,8 @@
     "update_failed": "Impossible de terminer. L’installation actuelle est inchangée. Réessayez.",
     "update_install_failed": "La mise à jour n’a pas démarré. Ouvrez codumi depuis l’ancien dossier conservé.",
     "update_note": "Téléchargement manuel HTTPS depuis hlatki01/codumi. SHA-256 et chemins ZIP vérifiés. Exécutable non signé. Ancien dossier conservé pour revenir en arrière.",
-    "update_folder": "Ouvrir le dossier de l’app"
+    "update_folder": "Ouvrir le dossier de l’app",
+    "update_button": "Installer {version}"
   },
   "de": {
     "tray_title": "Sitzungen und Aktivität",
@@ -807,7 +811,7 @@
     "update_install": "Installieren und neu starten",
     "update_release": "Release auf GitHub ansehen",
     "update_installed": "Installiert: {version}",
-    "update_not_checked": "Updates werden nur auf Wunsch gesucht.",
+    "update_not_checked": "Neue Versionen werden nach dem Start und alle sechs Stunden gesucht.",
     "update_checking": "GitHub wird geprüft…",
     "update_current": "Du bist auf dem neuesten Stand.",
     "update_available": "Verfügbar: {version}",
@@ -817,7 +821,8 @@
     "update_failed": "Update nicht abgeschlossen. Die aktuelle Installation bleibt unverändert. Erneut versuchen.",
     "update_install_failed": "Das Update konnte nicht starten. Öffne codumi aus dem erhaltenen bisherigen Ordner.",
     "update_note": "Manueller HTTPS-Download von hlatki01/codumi. SHA-256 und ZIP-Pfade werden geprüft. Exe unsigniert. Der alte Ordner bleibt zur Rückkehr erhalten.",
-    "update_folder": "App-Ordner öffnen"
+    "update_folder": "App-Ordner öffnen",
+    "update_button": "Update {version}"
   },
   "it": {
     "tray_title": "Sessioni e attività",
@@ -971,7 +976,7 @@
     "update_install": "Installa e riavvia",
     "update_release": "Vedi versione su GitHub",
     "update_installed": "Installato: {version}",
-    "update_not_checked": "Gli aggiornamenti vengono cercati solo su richiesta.",
+    "update_not_checked": "Le nuove versioni vengono cercate dopo l’avvio e ogni sei ore.",
     "update_checking": "Controllo GitHub…",
     "update_current": "Sei aggiornato.",
     "update_available": "Disponibile: {version}",
@@ -981,6 +986,7 @@
     "update_failed": "Impossibile completare. L’installazione attuale è invariata. Riprova.",
     "update_install_failed": "L’aggiornamento non è partito. Apri codumi dalla vecchia cartella conservata.",
     "update_note": "Download manuale HTTPS da hlatki01/codumi. SHA-256 e percorsi ZIP verificati. Eseguibile non firmato. La vecchia cartella permette il ripristino.",
-    "update_folder": "Apri cartella app"
+    "update_folder": "Apri cartella app",
+    "update_button": "Aggiorna {version}"
   }
 }

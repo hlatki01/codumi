@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## v0.3.2 - A gentle update reminder
+
+- Check for new releases 30 seconds after startup and every six hours.
+- Show an update button in the tray footer when a newer release is available.
+- Keep connection failures quiet, skip automatic checks in demo mode, and preserve staged downloads.
+- Downloads and installation still require explicit clicks.
+
 ## v0.3.1 - Update verification
 
 - Show the installed version beside the codumi name in the tray header.

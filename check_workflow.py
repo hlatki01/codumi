@@ -163,6 +163,12 @@ with tempfile.TemporaryDirectory() as folder,patch('updater.check_latest') as ch
         check.return_value=info
         app.check_updates();pump(app,.2)
         assert app.update_status=='available' and app.update_info==info
+        app.close_menu();app.show_tray();pump(app)
+        assert app.tray.activity_button.winfo_manager()=='place'
+        assert app.tray.activity_button.cget('text')==app.t('update_button',version=info['version'])
+        app.tray.activity_button.invoke();pump(app)
+        assert app.workspace_open and app.workspace_page=='updates'
+
         staged={'root':Path(folder)/'updates/stage/codumi-Windows','archive':Path(folder)/'package.zip','digest':'0'*64,'version':'v0.3.1'}
         with patch('updater.stage_release',return_value=staged):
             app.download_update();pump(app,.2)
