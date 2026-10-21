@@ -938,6 +938,7 @@ class App:
             dx,dy = event.x_root-px,event.y_root-py
             if abs(dx)+abs(dy)>4:
                 if not self.moved:
+                    self.dismiss_notice()
                     self.hide_tray(immediate=True)
                 self.moved = True
                 area = desktop.work_area(self.root,event.x_root,event.y_root)
@@ -1132,22 +1133,36 @@ class App:
         overlay_window(window,True)
         area=self.work_area()
         width=min(300,area[2]-area[0]-24)
-        x=max(area[0]+12,min(self.pet_x+64-width,area[2]-width-12))
-        y=self.pet_y+76
-        if y+80>area[3]-12: y=max(area[1]+12,self.pet_y-92)
         def open_session():
             self.dismiss_notice()
             self.select_session(key)
-        body=tk.Button(window,text=self.t("alert_"+kind)+"\n"+project[:40],command=open_session,
-                       bg=BG,fg=TEXT,activebackground=CARD,activeforeground=MINT,
-                       anchor="w",justify="left",relief="flat",bd=0,padx=12,pady=10,
+        canvas=tk.Canvas(window,bg=KEY,highlightthickness=0)
+        canvas.place(x=0,y=0,relwidth=1,relheight=1)
+        body=tk.Button(window,text=self.t("speech_"+kind,project=project[:40]),command=open_session,
+                       bg=BG,fg=TEXT,activebackground=BG,activeforeground=MINT,
+                       anchor="nw",justify="left",relief="flat",bd=0,padx=0,pady=0,
                        font=("Segoe UI",10),wraplength=width-52,cursor="hand2")
-        body.place(x=0,y=0,width=width-30,height=80)
-        tk.Button(window,text="×",command=self.dismiss_notice,bg=BG,fg=MUTED,relief="flat",
-                  bd=0,font=("Segoe UI",11),cursor="hand2").place(x=width-30,y=0,width=30,height=80)
-        window.configure(bg=BG)
+        body.update_idletasks()
+        height=max(92,body.winfo_reqheight()+54)+12
+        p=desktop.speech_placement(self.pet_x,self.pet_y,area,width,height)
+        top,bottom=(0,height-12) if p["above"] else (12,height)
+        edge=bottom-2 if p["above"] else top+2
+        point=height-1 if p["above"] else 1
+        canvas.create_polygon(p["tip"]-9,edge,p["tip"],point,p["tip"]+9,edge,
+                              fill=BG,outline=BORDER,width=1)
+        rounded(canvas,1,top+1,width-1,bottom-1,16,BG,BORDER)
+        join=bottom-1 if p["above"] else top+1
+        canvas.create_line(p["tip"]-7,join,p["tip"]+7,join,fill=BG,width=2)
+        canvas.create_oval(17,top+17,22,top+22,fill=MINT,outline="")
+        canvas.create_text(29,top+20,text=self.t.pet_name(self.pet.pet_id),anchor="w",fill=MINT,
+                           font=("Segoe UI",9,"bold"))
+        body.place(x=17,y=top+36,width=width-51,height=height-12-48)
+        tk.Button(window,text="×",command=self.dismiss_notice,bg=BG,fg=MUTED,
+                  activebackground=BG,activeforeground=TEXT,relief="flat",bd=0,
+                  font=("Segoe UI",11),cursor="hand2").place(x=width-35,y=top+10,width=23,height=24)
         window.deiconify()
-        desktop.place(window,x,y,width,80)
+        desktop.place(window,p["x"],p["y"],width,height)
+        desktop.speech_shape(window,width,height,p["tip"],p["above"])
         self.toast_timer=self.root.after(5000,self.dismiss_notice)
 
     def save_preferences(self):

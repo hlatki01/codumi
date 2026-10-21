@@ -1,36 +1,15 @@
-# codumi v0.2.0 — A companion with a memory
+﻿# codumi v0.2.1 — A little voice
 
-Your little coding companion now remembers its favorite projects and brings Cursor into the session tray.
+Your companion now speaks through a chat bubble.
 
-## New
+- Rounded dark bubbles with a tail pointing toward the pet.
+- First-person completion, error, and attention messages in all six languages.
+- The bubble moves above the pet when space below is limited.
+- Click its message to open the session, or × to dismiss it. Transparent corners pass clicks through to the application underneath.
+- Moving the pet dismisses its current bubble.
 
-- Read-only discovery of local Cursor JSONL transcripts, plus workspace metadata matching when available.
-- Pin projects and keep them at the top; remember the selected session after restarting codumi.
-- Configurable, clickable notices for task completion, errors, and requests for attention.
-- A temporary completion star that opens the finished session, and a small indicator for other busy sessions.
-- Session token breakdowns and daily increments observed while codumi runs.
-- A 25-minute concentration mode that silences notices and sound and stills the pet.
-- A native global shortcut: Ctrl+Alt+N, with alternative combinations, an Off option, and conflict reporting.
-- Persistent project window associations validated against the original live window and process identity. Cursor asks you to choose its original window on first use.
-- Distinct species gestures and a scrollable companion settings panel in all six languages.
+All v0.2 features remain available. Existing preferences stay compatible. To update into a fresh folder, close codumi and copy your preferences.json into the new extracted folder before launching codumi.exe.
 
-Open Settings → Companion & activity for notice controls, concentration, shortcuts, and usage summaries. Pin a project from session details or by right-clicking its row.
+49 unit tests passed. Native speech checks cover six languages, three message types, text fit, both tail directions, screen edges, shaped hit regions, session actions, and dismissal.
 
-## Download and update
-
-Extract the entire Windows x64 ZIP to a writable folder and open codumi.exe. Python is bundled; no account or API key is required for monitoring.
-
-To preserve settings when moving to a fresh folder, close the previous codumi instance and copy its preferences.json into the new extracted folder before opening the app. Keep the full runtime folder with the executable. Existing pet, position, language, sound, and topmost settings remain compatible.
-
-Application code and sprites are MIT-licensed. Everyone is welcome to contribute fixes, translations, pets, accessibility improvements, and Windows testing.
-
-## Limits
-
-- Cursor formats vary. Completion, permission, timestamp, and usage fields may be absent. Missing tokens or completion events are never invented; legacy text-only and remote cloud transcripts are not monitored.
-- Daily totals include new usage observed with codumi open, excluding historical discovery and backfill. They do not reconstruct usage while codumi was closed.
-- Saved window associations are valid only while the original window and process identity remain valid. Windows may refuse foreground activation; exact terminal tab/pane selection is not automated.
-- The executable is unsigned. Real key presses, physical mixed-DPI monitors, screen readers, clean installations, and prolonged resource use need broader user-desktop testing.
-
-## Validation
-
-49 unit tests plus native checks cover the session readers, settings in six languages, favorites, notices, concentration, usage, hotkey message delivery and cleanup, window identity validation, hover, dragging, token labels, all ten pets, and animated exit. The companion panel is also exercised on a 640×480 work area. See VALIDATION.md for environmental limitations.
+The executable remains unsigned. Cursor's available states and usage depend on its local transcripts, and original-window activation remains subject to Windows foreground rules.

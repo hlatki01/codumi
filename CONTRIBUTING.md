@@ -24,7 +24,7 @@ Keep session monitoring separate from rendering. Prefer the standard library and
 Run the unit tests, then the native checks relevant to your change:
 
 - Session parsing: test_sessions.py, test_usage.py, test_companion.py.
-- Companion settings, favorites, notices, and usage: test_companion.py, check_companion.py.
+- Companion settings, favorites, notices, and usage: test_companion.py, check_companion.py, check_speech.py.
 - Overlay geometry and spring motion: test_overlay.py.
 - Pets and animations: test_pet_catalog.py, test_exit.py, check_pet_motion.py, check_exit.py.
 - Languages and settings: test_i18n.py, check_locales.py, check_settings_reaction.py.

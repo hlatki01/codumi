@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## v0.2.1 — A little voice
+
+- Notifications are rounded speech bubbles with a tail pointing toward the pet.
+- Completion, error, and attention messages speak in the first person in all six languages.
+- Bubbles appear above the pet when needed, preserve transparent click-through corners, and keep session and close actions.
+- Dragging the pet dismisses its bubble so the tail cannot become detached.
+
 ## v0.2.0 — A companion with a memory
 
 - Read-only Cursor JSONL transcript support and workspace metadata matching.

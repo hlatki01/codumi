@@ -36,6 +36,17 @@ def circle_contains(x, y, px, py):
     return (px - x - 32) ** 2 + (py - y - 32) ** 2 <= 32 ** 2
 
 
+def speech_placement(x,y,area,width,height):
+    left,top,right,bottom=area
+    width=min(width,right-left-24)
+    bx=max(left+12,min(x+64-width,right-width-12))
+    above=y+72+height>bottom-12
+    by=y-height-8 if above else y+72
+    by=max(top+12,min(by,bottom-height-12))
+    tip=max(20,min(x+32-bx,width-20))
+    return dict(x=bx,y=by,width=width,height=height,tip=tip,above=above)
+
+
 class Spring:
     def __init__(self):
         self.value = self.velocity = self.target = 0.0
@@ -238,3 +249,20 @@ class GlobalHotkey:
         self.registered=False
         self.signal.clear()
         return True
+
+
+def speech_shape(window,width,height,tip,above):
+    if not WINDOWS: return
+    top,bottom=(0,height-12) if above else (12,height)
+    edge=bottom-1 if above else top+1
+    point=height if above else 0
+    region=gdi.CreateRoundRectRgn(0,top,width,bottom,32,32)
+    points=(w.POINT*3)(w.POINT(tip-9,edge),w.POINT(tip,point),w.POINT(tip+9,edge))
+    tail=gdi.CreatePolygonRgn(points,3,1)
+    try:
+        if not region or not tail or not gdi.CombineRgn(region,region,tail,2): raise c.WinError()
+        if not user.SetWindowRgn(handle(window),region,True): raise c.WinError()
+        region=None
+    finally:
+        if region: gdi.DeleteObject(region)
+        if tail: gdi.DeleteObject(tail)

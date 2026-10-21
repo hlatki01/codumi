@@ -51,6 +51,10 @@ The portable launcher passed its demo smoke test. Release archives are checked a
 - Global hotkey delivery is exercised with a message posted to its own Win32 thread; actual key presses on the normal user desktop need user testing.
 - Daily counters intentionally exclude initial discovery, history backfill, and usage while the app is closed. Old preferences retain pet, position, language, sound, and topmost settings.
 
+## v0.2.1 speech bubbles
+
+`check_speech.py` verifies all three first-person messages in all six languages, text fit, above/below placement, negative monitor coordinates, edge clamping, transparent hit regions, the tail region, session activation, and dismissal. The full 49-test unit suite also passes.
+
 ## Important limits
 
 - This isolated desktop has no usable foreground window. Actual activation on the user's desktop could not be confirmed; the app reports refusal instead of claiming success.

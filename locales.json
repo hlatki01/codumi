@@ -106,7 +106,10 @@
     "completion_tip": "A session finished. Click the star to see it.",
     "focus_cursor": "Focus Cursor",
     "choose_window": "Choose app window…",
-    "usage_daily_breakdown": "Today · input {input} · output {output}\nCache write {write} · read {read}"
+    "usage_daily_breakdown": "Today · input {input} · output {output}\nCache write {write} · read {read}",
+    "speech_complete": "I finished the task in {project}!",
+    "speech_error": "Something went wrong in {project}. Can you take a look?",
+    "speech_waiting": "I need your attention in {project}."
   },
   "pt": {
     "tray_title": "Sessões e atividade",
@@ -215,7 +218,10 @@
     "completion_tip": "Uma sessão terminou. Clique na estrela para vê-la.",
     "focus_cursor": "Focar Cursor",
     "choose_window": "Escolher janela do app…",
-    "usage_daily_breakdown": "Hoje · entrada {input} · saída {output}\nCache escrita {write} · leitura {read}"
+    "usage_daily_breakdown": "Hoje · entrada {input} · saída {output}\nCache escrita {write} · leitura {read}",
+    "speech_complete": "Terminei a tarefa em {project}!",
+    "speech_error": "Algo deu errado em {project}. Pode dar uma olhada?",
+    "speech_waiting": "Preciso da sua atenção em {project}."
   },
   "es": {
     "tray_title": "Sesiones y actividad",
@@ -324,7 +330,10 @@
     "completion_tip": "Una sesión terminó. Pulsa la estrella para verla.",
     "focus_cursor": "Enfocar Cursor",
     "choose_window": "Elegir ventana de la app…",
-    "usage_daily_breakdown": "Hoy · entrada {input} · salida {output}\nCaché escritura {write} · lectura {read}"
+    "usage_daily_breakdown": "Hoy · entrada {input} · salida {output}\nCaché escritura {write} · lectura {read}",
+    "speech_complete": "¡Terminé la tarea en {project}!",
+    "speech_error": "Algo salió mal en {project}. ¿Puedes revisarlo?",
+    "speech_waiting": "Necesito tu atención en {project}."
   },
   "fr": {
     "tray_title": "Sessions et activité",
@@ -433,7 +442,10 @@
     "completion_tip": "Une session est terminée. Cliquez sur l’étoile.",
     "focus_cursor": "Afficher Cursor",
     "choose_window": "Choisir la fenêtre…",
-    "usage_daily_breakdown": "Aujourd’hui · entrée {input} · sortie {output}\nCache écriture {write} · lecture {read}"
+    "usage_daily_breakdown": "Aujourd’hui · entrée {input} · sortie {output}\nCache écriture {write} · lecture {read}",
+    "speech_complete": "J’ai terminé la tâche dans {project} !",
+    "speech_error": "Un problème dans {project}. Tu peux regarder ?",
+    "speech_waiting": "J’ai besoin de toi dans {project}."
   },
   "de": {
     "tray_title": "Sitzungen und Aktivität",
@@ -542,7 +554,10 @@
     "completion_tip": "Eine Sitzung ist fertig. Zum Öffnen auf den Stern klicken.",
     "focus_cursor": "Cursor aktivieren",
     "choose_window": "App-Fenster wählen…",
-    "usage_daily_breakdown": "Heute · Eingabe {input} · Ausgabe {output}\nCache schreiben {write} · lesen {read}"
+    "usage_daily_breakdown": "Heute · Eingabe {input} · Ausgabe {output}\nCache schreiben {write} · lesen {read}",
+    "speech_complete": "Ich bin mit der Aufgabe in {project} fertig!",
+    "speech_error": "In {project} ist etwas schiefgelaufen. Schau bitte nach!",
+    "speech_waiting": "Ich brauche deine Aufmerksamkeit in {project}."
   },
   "it": {
     "tray_title": "Sessioni e attività",
@@ -651,6 +666,9 @@
     "completion_tip": "Una sessione è terminata. Clicca sulla stella.",
     "focus_cursor": "Mostra Cursor",
     "choose_window": "Scegli finestra app…",
-    "usage_daily_breakdown": "Oggi · input {input} · output {output}\nCache scrittura {write} · lettura {read}"
+    "usage_daily_breakdown": "Oggi · input {input} · output {output}\nCache scrittura {write} · lettura {read}",
+    "speech_complete": "Ho finito l’attività in {project}!",
+    "speech_error": "Qualcosa è andato storto in {project}. Puoi controllare?",
+    "speech_waiting": "Ho bisogno della tua attenzione in {project}."
   }
 }

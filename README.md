@@ -84,6 +84,7 @@ The pet can show working, thinking, waiting, ready, resting, error, and context 
 ## New in v0.2: a companion with a memory
 
 - **Pin your projects.** Right-click a session or use **Pin project** in its details. Favorites stay at the top, and your selected session is remembered.
+- **Your pet has a little voice.** Rounded chat bubbles point toward your companion, with first-person messages like “I finished the task in orbit!”
 - **Know when to look up.** Discreet, clickable notices for completion, errors, and requests for attention. Choose each notice type independently.
 - **One little star.** A completed session leaves a star on the bubble for up to a minute. Click the star to open that session.
 - **A sleepy pet can have busy neighbors.** A small mint counter shows other working, thinking, or compacting sessions; the hover tooltip explains it.
@@ -221,6 +222,7 @@ python check_terminal_picker.py
 python check_exit.py
 python check_tokens.py
 python check_companion.py
+python check_speech.py
 python app.py --demo --smoke-test
 ```
 
