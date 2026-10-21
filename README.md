@@ -96,6 +96,14 @@ The pet can show working, thinking, waiting, ready, resting, error, and context 
 
 Find notices, concentration, shortcuts, and token summaries in **Settings → Companion & activity**. This panel scrolls on smaller screens.
 
+### A little voice, a little closer
+
+In [v0.2.2](https://github.com/hlatki01/codumi/releases/tag/v0.2.2), your companion speaks through a chat bubble above and to its left, with a slanted tail pointing back toward the pet. Click the message to open the session it is talking about.
+
+<p align="center">
+  <img src="docs/images/codumi-speech-bubble.png" alt="codumi v0.2.2 on Windows saying I finished the task in projetos, in a chat bubble above and to the left of its pet" width="480">
+</p>
+
 ### Cursor, meet codumi
 
 Recent local JSONL conversations under `.cursor/projects/*/agent-transcripts` appear automatically. codumi also understands Cursor's [documented stream JSON events](https://cursor.com/docs/cli/reference/output-format) when present in those transcripts. Workspace metadata supplies the project path when available; otherwise the encoded project folder is shown.
