@@ -44,12 +44,12 @@ Windows reduced-motion settings are respected. Personality should be comfortable
 
 ## Pick your deskmate
 
-Ten native pixel pets, one spot beside your work.
+Ten native pixel pets, one spot beside your work. These are their actual in-app working animations.
 
 | | | | | |
 | :---: | :---: | :---: | :---: | :---: |
-| ● **codumi** | 🐈 **Cat** | 🐕 **Dog** | 🦊 **Fox** | 🐇 **Rabbit** |
-| 🐼 **Panda** | 🐸 **Frog** | 🦉 **Owl** | 🤖 **Robot** | 🐉 **Dragon** |
+| <img src="docs/images/pets/codumi.gif" alt="codumi working animation from codumi" width="80" height="80"><br>**codumi** | <img src="docs/images/pets/cat.gif" alt="Cat working animation from codumi" width="80" height="80"><br>**Cat** | <img src="docs/images/pets/dog.gif" alt="Dog working animation from codumi" width="80" height="80"><br>**Dog** | <img src="docs/images/pets/fox.gif" alt="Fox working animation from codumi" width="80" height="80"><br>**Fox** | <img src="docs/images/pets/rabbit.gif" alt="Rabbit working animation from codumi" width="80" height="80"><br>**Rabbit** |
+| <img src="docs/images/pets/panda.gif" alt="Panda working animation from codumi" width="80" height="80"><br>**Panda** | <img src="docs/images/pets/frog.gif" alt="Frog working animation from codumi" width="80" height="80"><br>**Frog** | <img src="docs/images/pets/owl.gif" alt="Owl working animation from codumi" width="80" height="80"><br>**Owl** | <img src="docs/images/pets/robot.gif" alt="Robot working animation from codumi" width="80" height="80"><br>**Robot** | <img src="docs/images/pets/dragon.gif" alt="Dragon working animation from codumi" width="80" height="80"><br>**Dragon** |
 
 Choose one in **Settings → Pet**. Drag the bubble wherever it feels at home; codumi remembers its position.
 
