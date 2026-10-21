@@ -1,8 +1,12 @@
-# codumi v0.3.2 - A gentle update reminder
+# codumi v0.3.3 - Ready for the update test
 
-codumi checks GitHub 30 seconds after startup and every six hours. A newer release adds an update button to the tray footer, opening the existing download and install page. Network failures stay quiet; demo mode never checks automatically. Downloads and installation still require your click, with checksum validation, preference transfer, and rollback preserved.
+This release integrates the companion workflow and periodic update reminders into main. It has the same behavior as v0.3.2, with a new visible version so the full update flow can be tested.
 
-This release includes PR #2, which remains open; main has not been merged.
+## Test the update from v0.3.2
+
+After the automatic check (30 seconds after startup, then every six hours), open the pet tray and click the update button. Download and verify the package, then choose Install and restart. The header should show v0.3.3 and your preferences should remain intact. You can also check immediately from the Updates page. The previous application folder is kept for rollback.
+
+Downloads and installation still require your click.
 
 ## New
 

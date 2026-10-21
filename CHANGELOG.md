@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## v0.3.3 - Ready for the update test
+
+- Publish the integrated companion workflow and periodic update checks.
+- Advance the visible version to verify the real v0.3.2 download and restart flow.
+- No behavior changes relative to v0.3.2.
+
 ## v0.3.2 - A gentle update reminder
 
 - Check for new releases 30 seconds after startup and every six hours.
@@ -11,7 +17,7 @@
 
 - Show the installed version beside the codumi name in the tray header.
 - Publish a portable update to exercise the v0.3.0 download and restart flow.
-- Includes the v0.3 companion workflow changes below; main remains unchanged.
+- Includes the v0.3 companion workflow changes below; the workflow is now integrated into main.
 
 ## v0.3.0 — Attention when it matters (unreleased)
 

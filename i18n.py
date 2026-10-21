@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 APP_NAME = "codumi"
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 CATALOGS = json.loads(Path(__file__).with_name("locales.json").read_text(encoding="utf-8"))
 LANGUAGE_NAMES = {"en":"English","pt":"Português","es":"Español","fr":"Français","de":"Deutsch","it":"Italiano"}
 EVENT_KEYS = {text:key for key,text in CATALOGS["pt"].items() if key.startswith("event.")}
