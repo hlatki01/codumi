@@ -8,6 +8,10 @@ A small animated desktop pet that keeps you company while Claude Code and Codex 
 
 [Download](https://github.com/hlatki01/codumi/releases/latest) · [Report a bug](https://github.com/hlatki01/codumi/issues) · [Contribute](CONTRIBUTING.md)
 
+<p align="center">
+  <img src="docs/images/codumi-windows.png" alt="codumi on Windows showing its floating pet, session tray, and token usage" width="480">
+</p>
+
 ## Get started
 
 1. Download the Windows x64 ZIP from [Releases](https://github.com/hlatki01/codumi/releases).
