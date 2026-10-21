@@ -1,97 +1,165 @@
+<div align="center">
+
 # codumi ●
 
-**Your little coding companion.**
+### Your little coding companion.
 
-A small animated desktop pet that keeps you company while Claude Code and Codex work. Built for Windows, with a floating avatar, a hover tray, and local session monitoring.
+**Big ideas. Long builds. Tiny company.**
 
-**Open source under the MIT license. Everyone is welcome to contribute.**
+A little pet for the corner of your screen.<br>
+A window into what your coding agents are doing.<br>
+And a small celebration when the work is done.
 
-[Download](https://github.com/hlatki01/codumi/releases/latest) · [Report a bug](https://github.com/hlatki01/codumi/issues) · [Contribute](CONTRIBUTING.md)
+**Windows x64 · Claude Code + Codex · 10 pets · 6 languages · MIT**
 
-<p align="center">
-  <img src="docs/images/codumi-demo.gif" alt="codumi in action: hover expansion, working animation, completion celebration, and resting pet" width="640">
-</p>
+[**Adopt your codumi →**](https://github.com/hlatki01/codumi/releases/latest)<br>
+[Meet the pets](#pick-your-deskmate) · [Get started](#from-download-to-deskmate) · [Contribute](#theres-room-for-one-more)
 
-## Get started
+<img src="docs/images/codumi-demo.gif" alt="The real codumi interface: a hover reveals agent sessions, the pet works and celebrates, then returns to rest." width="640">
 
-1. Download the Windows x64 ZIP from [Releases](https://github.com/hlatki01/codumi/releases).
-2. Extract the **entire folder** to a writable location.
-3. Open **codumi.exe**. Python does not need to be installed.
-4. Find the circular pet on the right side of your screen. Hover over it to reveal your sessions.
+<sub>Actual Windows UI. Fictional sessions. Very real little companion.</sub>
 
-Keep the executable, source files, and runtime folder together. The portable build includes Python and Tcl/Tk. It needs no account, API key, or internet connection to monitor local sessions.
+</div>
 
-The initial release targets Windows x64. The executable is currently unsigned.
+---
 
-## Meet your companion
+## A tiny resident of your desktop
 
-- **Ten pets:** codumi, cat, dog, fox, rabbit, panda, frog, owl, robot, and dragon.
-- **Live states:** working, thinking, waiting, ready, resting, error, and context compaction, with brief completion celebrations.
-- **A little personality:** a hover jump, eyes that follow your cursor while working, and a fall-and-cry reaction after four clicks within 1.2 seconds.
-- **An animated goodbye:** the pet jumps out of its bubble, lands inside, and shrinks away when you quit.
-- **A compact hover tray:** recent sessions, provider, status, prompt, elapsed time, available token totals, and recent events.
-- **Windows integration:** drag to reposition, saved preferences, optional always-on-top behavior, screen-edge handling, and transparent corners that do not block other apps.
-- **Reduced motion:** follows the Windows setting and disables movement effects.
+Your agent is thinking. Your terminal is busy. Your coffee is getting cold.
 
-The pet represents the selected session. Its animations never change the agent's actual state.
+codumi keeps you company through all of it. It lives in a small floating bubble, follows your cursor with its eyes while working, and reveals your sessions when you hover. Move away, and the tray folds back into its little corner of the world.
 
-## Using codumi
+Select a session to make it your pet's focus. A resting pet can have busy neighbors: **the pet follows the selected session**, while the tray shows everyone else.
 
-| Action | How |
+| A little gesture | A little response |
 | --- | --- |
-| Show sessions | Hover over the pet |
-| Hide the tray | Leave the pet and tray for 250 ms |
-| Move the pet | Drag the avatar |
+| Say hello with your cursor | A small hop and a tray that springs open |
+| Let an agent work | A moving activity ring and eyes following your mouse |
+| Finish a task | A brief celebration |
+| Take a break | A breathing, sleepy companion |
+| Click four times in 1.2 seconds | A tumble, a few tears, and eventually back to business |
+| Say goodbye | One last jump out of the bubble, then a shrinking exit |
+
+Windows reduced-motion settings are respected. Personality should be comfortable, too.
+
+## Pick your deskmate
+
+Ten native pixel pets, one spot beside your work.
+
+| | | | | |
+| :---: | :---: | :---: | :---: | :---: |
+| ● **codumi** | 🐈 **Cat** | 🐕 **Dog** | 🦊 **Fox** | 🐇 **Rabbit** |
+| 🐼 **Panda** | 🐸 **Frog** | 🦉 **Owl** | 🤖 **Robot** | 🐉 **Dragon** |
+
+Choose one in **Settings → Pet**. Drag the bubble wherever it feels at home; codumi remembers its position.
+
+## Small bubble. Useful view.
+
+Hover to see your recent Claude Code and Codex sessions: project, provider, state, and token usage. Click a session for its latest prompt, elapsed time, exact token total, and recent activity. Click it again to fold the details away.
+
+```text
+orbit
+Claude · Working · 128.4K tokens
+
+atlas
+Codex  · Resting · 48.6K tokens
+```
+
+The pet can show working, thinking, waiting, ready, resting, error, and context compaction, with a brief celebration on completion. The tray includes session filtering and activity counts. An optional always-on-top setting keeps your companion nearby.
+
+**Want the original terminal?** Select a session and click **Focus terminal**. If discovery is ambiguous, use **Activity → Choose terminal window… → Use this window**. Windows may refuse activation, and selecting a particular terminal tab or pane is not automated. See the technical notes below.
+
+## From download to deskmate
+
+1. [Download the Windows x64 ZIP](https://github.com/hlatki01/codumi/releases/latest).
+2. Extract the **entire folder** to a writable location.
+3. Open **codumi.exe**.
+4. Look to the right side of your screen. Hover to say hello.
+
+Keep the executable, source files, and `runtime` folder together. Python and Tcl/Tk are bundled; monitoring local sessions needs no account, API key, or internet connection.
+
+The executable is currently unsigned. Releases include a `SHA256SUMS.txt` file for checking the download.
+
+### The little field guide
+
+| You want to… | Here's how |
+| --- | --- |
+| See your sessions | Hover over the pet |
+| Tuck the tray away | Leave the pet and tray for 250 ms |
+| Move your companion | Drag the avatar |
 | Open settings | Click **···** or right-click the pet |
-| Change pets | Open settings and choose **Pet** |
-| Change language | Open settings and choose **Language** |
-| Inspect a session | Click it to show details; click it again to collapse |
-| Focus its terminal | Select the session, then click **Focus terminal** |
-| Choose a terminal manually | **Activity → Choose terminal window… → Use this window** |
-| Quit | Click **×**, choose **Quit codumi**, or press **Ctrl+Q** in the panel |
+| Pick a pet or language | Choose **Pet** or **Language** in settings |
+| Expand or collapse a session | Click that session |
+| Return to a terminal | Select a session, then click **Focus terminal** |
+| Quit | Click **×**, choose **Quit codumi**, or use **Ctrl+Q** in the panel |
 
-For keyboard navigation, choose **Keyboard navigation** in settings. Use Tab to move between controls, Space to activate them, and Escape to dismiss the tray.
+For keyboard access, enable **Keyboard navigation** in settings. Use Tab to move between controls, Space to activate, and Escape to dismiss the tray. Transparent space around the overlay lets clicks reach the application underneath.
 
-If the app is unresponsive, `Fechar.cmd` closes only the Python process belonging to this distribution's runtime. Other Python processes are left alone.
+If the app becomes unresponsive, `Fechar.cmd` closes only the Python process belonging to that distribution's runtime.
 
-## Languages
+## Feels at home in your language
 
-English, Portuguese, Spanish, French, German, and Italian are included.
+**English · Português · Español · Français · Deutsch · Italiano**
 
-By default, codumi uses your Windows **display language**, with English as the fallback. Settings let you select a language manually or return to **Automatic (Windows)**. Changes apply immediately and are saved. The subtitle is translated too.
+codumi follows your Windows **display language**, with English as the fallback. Prefer another language? Choose it in **Settings → Language**, or return to **Automatic (Windows)**. The change is immediate, saved, and includes the subtitle.
 
-Project names, prompts, provider names, and tool identifiers retain their original text. To pick up a changed Windows display language in automatic mode, restart codumi.
+Project names, prompts, provider names, and tool identifiers keep their original text. Restart codumi after changing the Windows display language when using automatic selection.
 
-## Focusing the original terminal
+## Your sessions stay on your machine
 
-codumi tries to find the terminal where the selected session is already running. It does not open another shell or send commands to your session.
+codumi reads local session transcripts. It does not install agent hooks, modify conversations, read authentication files, or send session data over the network. Prompts appear locally in the tray.
 
-It uses Claude's session registry or the process holding Codex's writer file, checks process creation times, and looks for the visible console or its terminal-host ancestor. If the association is ambiguous, choose the window yourself from **Activity → Choose terminal window…**. That association lasts while codumi is open.
+Preferences live beside the app in `preferences.json`; diagnostic errors go to `codumi.log`. Neither is included in Git or release archives.
 
-Closed sessions and editor-integrated sessions may not expose a usable terminal window. Windows can also refuse foreground activation. The app reports these cases instead of guessing a window.
+<details>
+<summary><strong>Under the bubble: session states, tokens, and terminal discovery</strong></summary>
 
-**Selecting a specific tab or pane inside a terminal window is not automated.** Foreground activation still needs broader validation on regular user desktops.
+### Where sessions come from
 
-## Local data and privacy
+- Claude Code: `%USERPROFILE%\.claude\projects`, or `CLAUDE_CONFIG_DIR\projects`.
+- Codex: `%USERPROFILE%\.codex\sessions`, or `CODEX_HOME\sessions`.
 
-codumi reads local JSONL session files from:
+A background reader discovers up to 48 recently updated sessions, reads bounded JSONL tails, and follows complete appended lines.
 
-- `%USERPROFILE%\.claude\projects`, or `CLAUDE_CONFIG_DIR\projects`.
-- `%USERPROFILE%\.codex\sessions`, or `CODEX_HOME\sessions`.
+States depend on events the agent records. Missing permission or reasoning events cannot be inferred reliably. Five minutes without new records makes a session appear resting; that does not prove its process has exited. Pet animations never change the agent's actual state.
 
-The reader runs in a background thread. It discovers up to 48 recently updated sessions, reads bounded transcript tails, and follows complete appended lines.
+### What the token number means
 
-It does not install agent hooks, modify conversations, read authentication files, or send session data over the network. Prompts are displayed locally. Preferences are saved beside the app in `preferences.json`; diagnostic errors go to `codumi.log`. Neither belongs in Git or release archives.
+Token usage appears after session status. Codex uses the transcript's cumulative total. Claude sums input, output, cache-creation, and cache-read usage once per message, merging repeated streaming records.
 
-States depend on the events the agent records. Missing permission or reasoning events cannot be inferred reliably. Five minutes without new records makes a session appear resting; that does not prove its process has exited. Token usage appears immediately after the session state, for example **Working · 128K tokens**. Codex uses the transcript's cumulative total. Claude sums input, output, cache-creation, and cache-read usage once per message, merging repeated streaming records.
+Large Claude histories are counted in bounded background chunks without replacing live state. A **≥** prefix means older records are still being counted. Open session details for the unabridged number. When usage is absent, codumi does not invent a count; malformed or oversized records are skipped.
 
-Large Claude histories are counted in bounded background chunks without replacing live session state. A **≥** prefix means older records are still being counted. Click the session for the unabridged number; click it again to collapse its details. If no usage was recorded, the app does not invent a token count. Totals reflect available valid records; oversized or malformed records are skipped by the reader.
+These are **processed-token totals across requests**, including cache usage, rather than the current context-window size. Claude's fields follow the [documented usage breakdown](https://platform.claude.com/docs/en/build-with-claude/prompt-caching).
 
-Claude's input/cache fields follow the [documented usage breakdown](https://platform.claude.com/docs/en/build-with-claude/prompt-caching). These are processed-token totals across requests, not the current context-window size.
+### Returning to the original terminal
 
-## Run from source
+codumi uses Claude's session registry or the process holding Codex's writer file, checks process creation times, and looks for a visible console or terminal-host ancestor. Manual window associations last while codumi is open.
 
-Requirements: **Windows x64, Python 3.10+ with Tcl/Tk**. There are no PyPI dependencies.
+It does not open another shell or send commands to your session. Closed or editor-integrated sessions may have no usable terminal window. Windows can refuse foreground activation; selecting an exact tab or pane is not automated. Foreground activation still needs broader testing on regular user desktops.
+
+</details>
+
+## There's room for one more
+
+**Everyone is welcome to contribute.** First pull request? Favorite language missing? An animation idea? A monitor setup that does something strange? We'd love the help.
+
+| Your kind of contribution | A good place to start |
+| --- | --- |
+| 🐛 Find a bug | [Open an issue](https://github.com/hlatki01/codumi/issues) with steps to reproduce |
+| 🌍 Give codumi more words | Improve or add translations in `locales.json` |
+| ✨ Give it more personality | Refine sprites, motion, or reduced-motion behavior |
+| ♿ Make it easier to use | Improve keyboard access, readability, or accessibility |
+| 🖥️ Give it a new environment | Test monitors, scaling, and terminal hosts |
+| 📝 Explain something better | Improve the docs, examples, or onboarding |
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md), pick something small, and send a pull request. Please keep discussions kind and remove private conversations, paths, and credentials from reports.
+
+<details>
+<summary><strong>Build a little companion of your own: development, tests, and packaging</strong></summary>
+
+### Run from source
+
+Use **Windows x64 and Python 3.10+ with Tcl/Tk**. The application has no PyPI dependencies.
 
 ```powershell
 git clone https://github.com/hlatki01/codumi.git
@@ -99,13 +167,13 @@ cd codumi
 python app.py
 ```
 
-For fictional sessions, without reading your real agent history:
+To explore with fictional sessions, without reading real agent history:
 
 ```powershell
 python app.py --demo
 ```
 
-## Test
+### Check your changes
 
 ```powershell
 python -m unittest discover -v
@@ -120,55 +188,56 @@ python check_tokens.py
 python app.py --demo --smoke-test
 ```
 
-Native UI checks create temporary windows and preferences. Run them on Windows with Tcl/Tk. Foreground and Restart Manager checks may be restricted in sandboxed desktops; see [VALIDATION.md](VALIDATION.md) for the evidence and limits.
+Native checks create temporary windows and preferences. Run them on Windows with Tcl/Tk. Foreground and Restart Manager checks can be restricted on sandboxed desktops. [VALIDATION.md](VALIDATION.md) records the evidence and limits, including areas needing broader testing: clean installations, ARM64, physical mixed-DPI monitors, screen readers, and prolonged resource use.
 
-No linter is configured. Syntax can be checked with:
+No linter is configured. Check syntax with:
 
 ```powershell
 python -m py_compile app.py desktop.py pet.py sessions.py i18n.py terminal.py build.py
 ```
 
-## Build a portable release
+### Package for Windows
 
-On Windows x64, use Python with Tcl/Tk and the .NET Framework 4.x C# compiler included with Windows:
+Use Python with Tcl/Tk and the .NET Framework 4.x C# compiler included with Windows:
 
 ```powershell
 python build.py
 ```
 
-This creates `dist/codumi-Windows/codumi.exe` and `dist/codumi-Windows-x64.zip`. Existing output directories are never overwritten. To build elsewhere:
+Output: `dist/codumi-Windows/codumi.exe` and `dist/codumi-Windows-x64.zip`. Existing output directories are never overwritten. Choose a fresh directory for another build:
 
 ```powershell
-python build.py --output dist/v0.1.0/codumi-Windows
+python build.py --output dist/my-build/codumi-Windows
 ```
 
-The ZIP contains the app's source, licenses, documentation, and a local Python/Tcl/Tk runtime. It excludes preferences, logs, and Python caches.
+The ZIP includes source, licenses, documentation, and a local Python/Tcl/Tk runtime. It excludes preferences, logs, and Python caches.
 
-## Contribute
+### Find your way around
 
-**Everyone is welcome:** first-time contributors, developers, designers, translators, and Windows testers.
-
-Bug reports, small fixes, accessibility improvements, translations, animation refinements, and testing on different monitors and terminal hosts are all useful. You do not need a large feature to contribute.
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md), open an [issue](https://github.com/hlatki01/codumi/issues), or send a pull request. Please keep discussion respectful and include enough detail to reproduce a bug. Never attach private conversations or credentials.
-
-## Architecture
-
-| File | Responsibility |
+| File | What lives here |
 | --- | --- |
-| `app.py` | Floating windows, hover tray, settings, session selection, and preferences |
+| `app.py` | Floating windows, tray, settings, selection, and preferences |
 | `pet.py` | Ten native sprites and retained-canvas animations |
-| `desktop.py` | Win32 window behavior, monitor geometry, regions, and spring motion |
+| `desktop.py` | Win32 behavior, monitor geometry, input regions, and spring motion |
 | `sessions.py` | Read-only Claude/Codex transcript adapters |
-| `terminal.py` | Original-terminal discovery, identity checks, and focus requests |
-| `i18n.py`, `locales.json` | Windows display-language detection and UI translations |
-| `Launcher.cs`, `build.py` | Small Windows launcher and portable packaging |
+| `terminal.py` | Terminal discovery, identity checks, and focus requests |
+| `i18n.py`, `locales.json` | Windows language detection and translations |
+| `Launcher.cs`, `build.py` | Windows launcher and portable packaging |
 
-## License and credits
+</details>
 
-codumi's application code and sprites are licensed under [MIT](LICENSE).
+---
 
-The concept was inspired by [Notchi by sk-ruban](https://github.com/sk-ruban/notchi). This is an independent Windows implementation; no upstream code or sprites are included. It is not an official Notchi distribution.
+<div align="center">
 
-The bundled runtime keeps its own licenses. See [THIRD_PARTY.md](THIRD_PARTY.md) and `runtime/LICENSE.txt` in the portable distribution.
+**A small companion. An open invitation.**
 
+Application code and sprites released under the [MIT license](LICENSE).<br>
+Inspired by [Notchi, by sk-ruban](https://github.com/sk-ruban/notchi), and built independently for Windows.<br>
+No upstream code or sprites are included; codumi is not an official Notchi distribution.
+
+<sub>Bundled runtime licenses: <a href="THIRD_PARTY.md">THIRD_PARTY.md</a> and runtime/LICENSE.txt in the portable download.</sub>
+
+**See you in the corner of your screen. ●**
+
+</div>
