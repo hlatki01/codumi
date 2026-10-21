@@ -4,6 +4,9 @@ import argparse
 import ctypes
 import json
 import logging
+import os
+import subprocess
+import webbrowser
 import queue
 import sys
 import tempfile
@@ -15,10 +18,11 @@ from tkinter import messagebox, ttk
 
 import desktop
 import terminal
+import updater
 from pet import PetAvatar, PETS, COLORS, MINT, mix, pet_preview
 from sessions import Monitor, Session
-from companion import Activity, HOTKEYS, project_id
-from i18n import APP_NAME, Translator, LANGUAGE_NAMES
+from companion import Activity, HOTKEYS, project_id, ProjectPreferences, CompletionHistory, TONES, session_hash, attention_queue
+from i18n import APP_NAME, VERSION, Translator, LANGUAGE_NAMES
 
 BG = "#0D1522"
 CARD = "#172638"
@@ -236,6 +240,7 @@ class HoverTray:
             button.pack(fill="x",pady=1)
             self.language_buttons[code] = button
 
+        self.workspace=WorkspacePanel(self.window,app)
         self.companion_frame=tk.Canvas(self.window,bg=BG,highlightthickness=0)
         self.companion_content=tk.Frame(self.companion_frame,bg=BG,padx=8,pady=5)
         self.companion_window=self.companion_frame.create_window(0,0,anchor="nw",window=self.companion_content)
@@ -248,7 +253,9 @@ class HoverTray:
         for key,command in [("back",app.close_menu),("focus",app.toggle_focus),
                             ("complete",lambda:app.toggle_alert("complete")),
                             ("error",lambda:app.toggle_alert("error")),
-                            ("waiting",lambda:app.toggle_alert("waiting")),("hotkey",app.cycle_hotkey)]:
+                            ("waiting",lambda:app.toggle_alert("waiting")),("hotkey",app.cycle_hotkey),
+                            ("workspace",app.open_workspace),("presentation",app.toggle_presentation),
+                            ("edge",app.toggle_edge),("tone",app.cycle_tone)]:
             button=tk.Button(self.companion_content,command=command,bg=BG,fg=TEXT,
                              activebackground=CARD,activeforeground=MINT,relief="flat",anchor="w",
                              font=("Segoe UI",9),padx=6,pady=4,cursor="hand2")
@@ -333,18 +340,21 @@ class HoverTray:
         if self.app.menu_open:
             self.filter_button.place_forget()
             self.activity_button.place_forget()
+            self.workspace.frame.place_forget()
             self.settings_frame.place_forget()
             self.companion_frame.place_forget()
             self.pet_frame.place_forget()
             self.language_frame.place_forget()
             self.terminal_frame.place_forget()
-            frame = (self.companion_frame if self.app.companion_open else
+            frame = (self.workspace.frame if self.app.workspace_open else
+                     self.companion_frame if self.app.companion_open else
                      self.terminal_frame if self.app.terminal_picker_open else
                      self.pet_frame if self.app.pet_picker_open else
                      self.language_frame if self.app.language_picker_open else self.settings_frame)
             frame.place(x=origin+20,y=91,width=card_width-40,height=h-168)
             tk.Misc.lift(frame)
         else:
+            self.workspace.frame.place_forget()
             self.settings_frame.place_forget()
             self.companion_frame.place_forget()
             self.pet_frame.place_forget()
@@ -401,23 +411,28 @@ class HoverTray:
         for kind in ("complete","error","waiting"):
             self.companion_buttons[kind].configure(text=self.t("alert_"+kind)+" · "+self.t("enabled" if self.app.alerts[kind] else "disabled"))
         self.companion_buttons["hotkey"].configure(text=self.t("hotkey_choice",name=self.t("disabled") if self.app.hotkey_name=="Off" else self.app.hotkey_name)+"  ↻")
-        self.hotkey_notice.configure(text=self.t("hotkey_unavailable") if self.app.hotkey_failed else "")
-        self.summary.configure(text=self.app.usage_summary())
+        self.hotkey_notice.configure(text="\n".join(text for text in (self.t("hotkey_unavailable") if self.app.hotkey_failed else "",self.t("presentation_conflict") if self.app.presentation_hotkey_failed else "") if text))
+        self.companion_buttons["workspace"].configure(text=self.t("workspace")+"  →")
+        self.companion_buttons["presentation"].configure(text=self.t("presentation_on" if self.app.presentation else "presentation_off"))
+        self.companion_buttons["edge"].configure(text=self.t("edge_mode")+" · "+self.t("enabled" if self.app.edge_mode else "disabled"))
+        self.companion_buttons["tone"].configure(text=self.t("tone_label")+": "+self.t("tone."+self.app.tone)+"  ↻")
+        if self.app.workspace_open: self.workspace.refresh()
+        self.summary.configure(text=self.app.usage_summary()+"\n\n"+self.t("presentation_note"))
         name = self.t("automatic") if self.app.language=="auto" else LANGUAGE_NAMES[self.app.language]
         self.settings_buttons["language"].configure(text=self.t("language_choice",name=name)+"  →")
         for code,button in self.language_buttons.items():
             selected = code==self.app.language
             button.configure(bg=CARD if selected else BG,fg=MINT if selected else TEXT,
                              highlightbackground=MINT if selected else BG)
-        self.settings_buttons["pets"].configure(text=self.t("pet_choice",name=self.t.pet_name(self.app.pet.pet_id))+"  →")
+        self.settings_buttons["pets"].configure(text=self.t("pet_choice",name=self.t.pet_name(self.app.default_pet))+"  →")
         for pet_id,button in self.pet_buttons.items():
-            selected = pet_id==self.app.pet.pet_id
+            selected = pet_id==self.app.default_pet
             button.configure(bg=CARD if selected else BG,fg=MINT if selected else TEXT,
                              highlightbackground=MINT if selected else BG)
         self.settings_buttons["sound"].configure(text=self.t("sound_off") if self.app.sound else self.t("sound_on"))
         self.settings_buttons["topmost"].configure(text=self.t("topmost_off") if self.app.topmost else self.t("topmost_on"))
         visible = self.filtered_sessions()
-        if self.app.selected not in [s.key for s in visible]:
+        if self.app.selected not in [s.key for s in visible] and not (self.app.menu_open and any(s.key==self.app.selected for s in self.app.sessions)):
             self.app.selected = visible[0].key if visible else None
         keys = [s.key for s in visible]
         if keys != self.keys:
@@ -470,8 +485,8 @@ class HoverTray:
         duration = max(0, int(time.time() - session.started)) if session else 0
         self.meta.configure(text=(self.t("duration",time=f"{duration//3600:02d}:{duration//60%60:02d}:{duration%60:02d}")
                             + (" · "+("≥" if session.tokens_partial else "")+self.t("tokens",count=session.tokens) if session.tokens else "")) if session else self.t("no_selection"))
-        self.prompt_label.configure(text=session.prompt[:120] if session and session.prompt else self.t("no_prompt"))
-        self.feed_label.configure(text=self.t.warning(self.app.warning) or "\n".join(
+        self.prompt_label.configure(text=self.t("presentation_hidden") if self.app.presentation else session.prompt[:120] if session and session.prompt else self.t("no_prompt"))
+        self.feed_label.configure(text=self.t("presentation_hidden") if self.app.presentation else self.t.warning(self.app.warning) or "\n".join(
             f"{time.strftime('%H:%M',time.localtime(t))}   {self.t.event(label)[:32]}" for t,label in list(session.events)[-3:])
             if session else (self.t.warning(self.app.warning) or self.t("waiting_activity")))
         self.render()
@@ -513,6 +528,148 @@ class HoverTray:
         return "break"
 
 
+class WorkspacePanel:
+    """One scrollable view for attention, history, project overrides and updates."""
+    pages=("attention","history","project","updates")
+
+    def __init__(self,parent,app):
+        self.app=app
+        self.frame=tk.Frame(parent,bg=BG)
+        style=ttk.Style(self.frame)
+        style.configure("codumi.TCombobox",fieldbackground=CARD,background=CARD,foreground=TEXT,arrowcolor=MINT)
+        style.map("codumi.TCombobox",fieldbackground=[("readonly",CARD)],foreground=[("readonly",TEXT)])
+        self.frame.option_add("*TCombobox*Listbox.background",BG)
+        self.frame.option_add("*TCombobox*Listbox.foreground",TEXT)
+        self.selector=ttk.Combobox(self.frame,style="codumi.TCombobox",state="readonly",values=[app.t("page."+p) for p in self.pages],font=("Segoe UI",10))
+        self.selector.pack(fill="x",padx=8,pady=(4,8))
+        self.selector.current(self.pages.index(app.workspace_page))
+        self.selector.bind("<<ComboboxSelected>>",self.change_page)
+        self.canvas=tk.Canvas(self.frame,bg=BG,highlightthickness=0)
+        self.scroll=ttk.Scrollbar(self.frame,orient="vertical",command=self.canvas.yview,style="codumi.Vertical.TScrollbar")
+        self.scroll.pack(side="right",fill="y")
+        self.canvas.pack(fill="both",expand=True)
+        self.content=tk.Frame(self.canvas,bg=BG,padx=8,pady=4)
+        self.content_id=self.canvas.create_window(0,0,anchor="nw",window=self.content)
+        self.canvas.configure(yscrollcommand=self.scroll.set)
+        self.content.bind("<Configure>",lambda _:self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind("<Configure>",lambda e:self.canvas.itemconfigure(self.content_id,width=e.width))
+        self.canvas.bind("<MouseWheel>",self.wheel)
+        self.signature=None
+        self.buttons={}
+        self.combos={}
+
+    def wheel(self,event):
+        self.canvas.yview_scroll(-int(event.delta/120),"units")
+        return "break"
+
+    def change_page(self,_=None):
+        index=self.selector.current()
+        if index<0: return
+        self.app.workspace_page=self.pages[index]
+        self.signature=None
+        self.canvas.yview_moveto(0)
+        self.refresh()
+
+    def label(self,text,color=MUTED):
+        widget=tk.Label(self.content,text=text,bg=BG,fg=color,anchor="nw",justify="left",wraplength=258,font=("Segoe UI",9))
+        widget.pack(fill="x",pady=(2,8))
+        widget.bind("<MouseWheel>",self.wheel)
+        return widget
+
+    def button(self,key,text,command,enabled=True,parent=None):
+        widget=tk.Button(parent or self.content,text=text,command=command,bg=CARD,fg=MINT,
+                         activebackground=BORDER,activeforeground=TEXT,state="normal" if enabled else "disabled",
+                         relief="flat",anchor="w",wraplength=250,font=("Segoe UI",9),padx=7,pady=5,cursor="hand2")
+        if parent is None: widget.pack(fill="x",pady=(0,6))
+        widget.bind("<MouseWheel>",self.wheel)
+        widget.bind("<FocusIn>",lambda _,w=widget:self.reveal(w))
+        self.buttons[key]=widget
+        return widget
+
+    def reveal(self,widget):
+        self.canvas.update_idletasks()
+        y=widget.winfo_rooty()-self.content.winfo_rooty()
+        top=self.canvas.canvasy(0)
+        if y<top or y+widget.winfo_height()>top+self.canvas.winfo_height():
+            self.canvas.yview_moveto(y/max(1,self.content.winfo_height()))
+
+    def combo(self,field,label,choices,current):
+        self.label(label,TEXT)
+        values=[text for _,text in choices]
+        widget=ttk.Combobox(self.content,style="codumi.TCombobox",state="readonly",values=values,font=("Segoe UI",9))
+        widget.pack(fill="x",pady=(0,9))
+        index=next((i for i,(value,_) in enumerate(choices) if value==current),0)
+        widget.current(index)
+        def changed(_):
+            index=widget.current()
+            if index>=0: self.app.set_project_option(field,choices[index][0])
+        widget.bind("<<ComboboxSelected>>",changed)
+        widget.bind("<FocusIn>",lambda _,w=widget:self.reveal(w))
+        self.combos[field]=widget
+
+    def refresh(self):
+        a=self.app;t=a.t
+        session=a.current_session()
+        page=a.workspace_page
+        if page=='attention':
+            data=tuple((s.key,s.state,time.strftime('%H:%M',time.localtime(s.updated)),a.project_name(s)) for s in attention_queue(a.sessions))
+        elif page=='history':
+            live={session_hash(s) for s in a.sessions}
+            data=(a.history.enabled,tuple((r['id'],r['session'] in live) for r in a.history.records))
+        elif page=='project':
+            data=(a.selected,a.project_name(session) if session else '',json.dumps(a.projects.get(session),sort_keys=True))
+        else:
+            data=(a.update_status,a.update_busy,bool(a.staged_update),a.update_info['version'] if a.update_info else None)
+        signature=(page,a.presentation,t.language,data)
+        if signature==self.signature: return
+        self.signature=signature
+        for child in self.content.winfo_children(): child.destroy()
+        self.buttons={};self.combos={}
+        self.button('back',"←  "+t('back'),a.open_companion_settings)
+        page=a.workspace_page
+        if page=='attention':
+            items=attention_queue(a.sessions)
+            if not items: self.label(t('queue_empty'))
+            for item in items:
+                self.label(a.project_name(item)+' · '+item.provider+'\n'+t.state(item.state)+' · '+time.strftime('%H:%M',time.localtime(item.updated)),TEXT)
+                self.button('session:'+item.key,t('action_session'),lambda k=item.key:a.open_workspace_session(k))
+                self.button('window:'+item.key,t('action_window'),lambda k=item.key:a.open_workspace_session(k,True))
+        elif page=='history':
+            self.button('history',t('history_disable' if a.history.enabled else 'history_enable'),a.toggle_history)
+            self.label(t('history_note'))
+            if a.history.enabled:
+                self.button('clear',t('history_clear'),a.clear_history,bool(a.history.records))
+                if not a.history.records: self.label(t('history_empty'))
+                for record in reversed(a.history.records):
+                    name=t('private_project') if a.presentation else record['name']
+                    self.label(name+' · '+record['provider']+'\n'+time.strftime('%d/%m %H:%M',time.localtime(record['time'])),TEXT)
+                    match=next((s for s in a.sessions if session_hash(s)==record['session']),None)
+                    if match: self.button('history:'+record['id'],t('action_session'),lambda k=match.key:a.open_workspace_session(k))
+        elif page=='project':
+            if not session: self.label(t('no_selection'));return
+            options=a.projects.get(session)
+            self.label(a.project_name(session)+' · '+session.provider,TEXT)
+            self.label(t('project_note'))
+            self.combo('pet',t('pet_label'),[(None,t('inherit')),*[(key,t.pet_name(key)) for key in PETS]],options.get('pet'))
+            self.combo('tone',t('tone_label'),[(None,t('inherit')),*[(key,t('tone.'+key)) for key in TONES]],options.get('tone'))
+            choices=[(None,t('inherit')),(True,t('enabled')),(False,t('disabled'))]
+            for kind in ('complete','error','waiting'):
+                self.combo('alert.'+kind,t('alert_'+kind),choices,options.get('alert.'+kind))
+            self.combo('edge',t('edge_mode'),choices,options.get('edge'))
+            self.button('mute',t('project_unmute' if options.get('muted') else 'action_mute'),lambda:a.set_project_option('muted',not options.get('muted',False)))
+        elif page=='updates':
+            self.label(t('update_installed',version=VERSION),TEXT)
+            self.label(t('update_'+a.update_status,version=a.update_info['version'] if a.update_info else VERSION))
+            self.button('check',t('update_check'),a.check_updates,not a.update_busy)
+            self.button('download',t('update_download'),a.download_update,bool(a.update_info) and not a.update_busy and not a.staged_update)
+            self.button('install',t('update_install'),a.install_update,bool(a.staged_update) and not a.update_busy)
+            if a.update_info:
+                self.button('release',t('update_release'),a.open_release_page)
+                self.label(a.update_info['notes'])
+            self.button('folder',t('update_folder'),a.open_app_folder)
+            self.label(t('update_note'))
+
+
 class App:
     def __init__(self, demo=False, preferences_path=None):
         self.preferences_path = preferences_path or Path(__file__).with_name("preferences.json")
@@ -534,6 +691,23 @@ class App:
         profiles=self.preferences.get("window_profiles",{})
         self.window_profiles=profiles if isinstance(profiles,dict) else {}
         self.companion_open=False
+        self.workspace_open=False
+        self.workspace_page="attention"
+        self.projects=ProjectPreferences(self.preferences.get("projects"))
+        self.history=CompletionHistory(self.preferences.get("history_enabled"),self.preferences.get("history"))
+        self.presentation=self.preferences.get("presentation") is True
+        self.edge_mode=self.preferences.get("edge_mode") is True
+        self.edge_hidden=False
+        self.edge_idle_since=None
+        self.edge_reveal_until=0
+        self.tone=self.preferences.get("tone","friendly")
+        if self.tone not in TONES: self.tone="friendly"
+        self.default_pet=self.preferences.get("pet_kind","notchi")
+        if not isinstance(self.default_pet,str) or self.default_pet not in PETS: self.default_pet="notchi"
+        self.update_results=queue.Queue()
+        self.update_info=self.staged_update=None
+        self.update_busy=False
+        self.update_status="not_checked"
         self.toast=None
         self.toast_timer=None
         self.toast_queue=[]
@@ -542,6 +716,9 @@ class App:
         if self.hotkey_name not in HOTKEYS: self.hotkey_name="Ctrl+Alt+N"
         self.hotkey_failed=False
         if not demo: self.hotkey_failed=not self.hotkey.set(self.hotkey_name)
+        self.presentation_hotkey=desktop.GlobalHotkey()
+        self.presentation_hotkey_failed=False
+        if not demo: self.presentation_hotkey_failed=not self.presentation_hotkey.set("Ctrl+Alt+P")
         self.last_preferences=None
         self.sound = self.preferences.get("sound") is True
         self.root = tk.Tk()
@@ -550,7 +727,7 @@ class App:
         self.canvas = tk.Canvas(self.root, width=64, height=64, bg=KEY, highlightthickness=0, cursor="hand2")
         self.canvas.pack()
         self.pet_tooltip=Tooltip(self.canvas,"",self)
-        self.pet = PetAvatar(self.canvas,self.preferences.get("pet_kind","notchi"))
+        self.pet = PetAvatar(self.canvas,self.default_pet)
         self.completion_star=self.canvas.create_text(52,13,text="★",fill=MINT,font=("Segoe UI",12),state="hidden",tags="completion_badge")
         self.other_dot=self.canvas.create_oval(44,44,54,54,fill=MINT,outline=BG,state="hidden",tags="other_activity")
         self.other_count=self.canvas.create_text(49,49,text="",fill=BG,font=("Segoe UI",7,"bold"),state="hidden",tags="other_activity")
@@ -625,6 +802,7 @@ class App:
         self.tray.refresh()
 
     def show_tray(self, focus=False):
+        self.reveal_edge()
         if self.drag or self.closed:
             return
         self.leave_at = None
@@ -663,12 +841,20 @@ class App:
             row[0].event_generate("<Leave>")
 
     def update_hover(self, x, y, now):
+        if self.edge_hidden:
+            if desktop.contains(self.root,x,y):
+                self.reveal_edge()
+                self.edge_reveal_until=now+1
+                self.drag_suppressed=False
+                self.pet.hover(True,now)
+                self.show_tray()
+            else: return
         self.pet.pointer = (x-self.pet_x,y-self.pet_y)
         over_pet = desktop.circle_contains(self.pet_x,self.pet_y,x,y)
         self.pet.hover(over_pet and not self.drag and not self.drag_suppressed,now)
         if self.drag:
             return
-        inside = over_pet
+        inside = over_pet or now<self.edge_reveal_until
         if self.tray_visible:
             inside = inside or desktop.contains(self.tray.window,x,y)
         if self.drag_suppressed:
@@ -692,6 +878,8 @@ class App:
             return
         now = time.monotonic()
         self.check_terminal_result()
+        self.check_update_results()
+        if self.presentation_hotkey.pressed(): self.toggle_presentation()
         if self.hotkey.pressed():
             if self.tray_visible: self.dismiss_tray()
             else:
@@ -704,6 +892,7 @@ class App:
             self.last_motion_check = now
         x,y = self.root.winfo_pointerxy()
         self.update_hover(x,y,now)
+        self.update_edge(x,y,now)
         self.hover_id = self.root.after(40,self.poll_hover)
 
     def animate(self):
@@ -713,12 +902,12 @@ class App:
         session = self.current_session()
         state = session.display_state() if session else "sleeping"
         self.pet.update(state,now)
-        focused=self.focus_until>time.time()
+        focused=self.focus_until>time.time() or self.edge_hidden
         self.pet.draw(now,session.provider if session else "Codex",self.reduced or focused)
-        self.canvas.itemconfigure(self.completion_star,state="normal" if self.activity.badge else "hidden")
+        self.canvas.itemconfigure(self.completion_star,state="normal" if self.activity.badge and not self.presentation else "hidden")
         self.canvas.tag_raise(self.completion_star)
         others=sum(s.key!=self.selected and s.display_state() in {"working","thinking","compacting"} for s in self.sessions)
-        visible=bool(session and session.display_state() in {"idle","sleeping"} and others)
+        visible=bool(not self.presentation and session and session.display_state() in {"idle","sleeping"} and others)
         self.canvas.itemconfigure(self.other_dot,state="normal" if visible else "hidden")
         self.canvas.itemconfigure(self.other_count,state="normal" if visible else "hidden",text=str(others))
         self.canvas.tag_raise("other_activity")
@@ -767,19 +956,23 @@ class App:
             if any(session.key==self.restored_selection for session in self.sessions): self.selected=self.restored_selection
             self.restored_selection=None
         self.activity.update(self.sessions)
+        self.history.prune()
         pending,self.activity.ready=self.activity.ready,[]
         for kind,key,project in pending:
-            if self.alerts.get(kind) and self.focus_until<=time.time():
+            event_session=next((s for s in self.sessions if s.key==key),None)
+            if kind=="complete" and event_session: self.history.add(event_session)
+            if self.notice_enabled(kind,key):
                 self.toast_queue.append((kind,key,project))
         if self.focus_until and self.focus_until<=time.time(): self.focus_until=0
         self.show_next_notice()
         self.tray.refresh()
+        self.apply_project_settings()
         session=self.current_session()
         tip=(self.project_name(session)+" · "+session.provider+" · "+self.t.state(session.display_state())) if session else self.t("no_selection")
         others=sum(s.key!=self.selected and s.display_state() in {"working","thinking","compacting"} for s in self.sessions)
         if others: tip+="\n"+self.t("other_working",count=others)
         if self.focus_until>time.time(): tip+="\n"+self.t("focus_remaining",minutes=max(1,int((self.focus_until-time.time())/60)+1))
-        if self.activity.badge: tip+="\n"+self.t("completion_tip")
+        if self.activity.badge and not self.presentation: tip+="\n"+self.t("completion_tip")
         self.pet_tooltip.text=tip
         self.save_preferences()
         now = time.monotonic()
@@ -789,7 +982,7 @@ class App:
             if completed > previous and time.time()-completed < 8:
                 if session.key == self.selected:
                     self.pet.celebrate(now)
-                if self.sound and self.focus_until<=time.time():
+                if self.sound and self.notice_enabled("complete",session.key):
                     self.root.bell()
             self.completions[session.key] = completed
         self.completions = {s.key:self.completions[s.key] for s in self.sessions}
@@ -798,6 +991,7 @@ class App:
         self.refresh_id = self.root.after(1000,self.refresh)
 
     def project_name(self,session):
+        if self.presentation: return self.t("private_project")
         return session.project if session.cwd or session.project_hint else self.t("local_session")
 
     def current_session(self):
@@ -810,6 +1004,9 @@ class App:
     def select_session(self,key):
         if not any(s.key==key for s in self.sessions):
             return
+        if self.tray.filter_active and key not in [s.key for s in self.tray.filtered_sessions()]:
+            self.tray.filter_active=False
+            self.tray.filter_button.configure(text=self.t("all")+"  →")
         details = key!=self.selected or not self.tray.details
         self.selected = key
         self.restored_selection=None
@@ -883,12 +1080,13 @@ class App:
         self.tray.refresh()
 
     def open_terminal_picker(self):
+        if self.presentation: return
         if not self.current_session():
             return
         self.terminal_pending = self.terminal_requested = None
         self.terminal_choices = terminal.available_terminals()
         self.menu_open = self.terminal_picker_open = True
-        self.pet_picker_open = self.language_picker_open = self.companion_open = False
+        self.pet_picker_open = self.language_picker_open = self.companion_open = self.workspace_open = False
         self.position_tray()
         self.tray.terminal_list.delete(0,"end")
         for title,_ in self.terminal_choices:
@@ -928,6 +1126,7 @@ class App:
         self.show_tray()
 
     def press(self,event):
+        self.reveal_edge()
         self.pet.jump_until = 0
         self.drag = event.x_root,event.y_root,self.pet_x,self.pet_y
         self.moved = False
@@ -970,8 +1169,8 @@ class App:
             desktop.prepare(self.tray.window,self.topmost)
 
     def open_menu(self):
-        if self.pet_picker_open or self.language_picker_open or self.terminal_picker_open or self.companion_open:
-            self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = self.companion_open = False
+        if self.pet_picker_open or self.language_picker_open or self.terminal_picker_open or self.companion_open or self.workspace_open:
+            self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = self.companion_open = self.workspace_open = False
             self.tray.layout()
             return
         if self.menu_open:
@@ -986,7 +1185,7 @@ class App:
     def open_pet_picker(self):
         self.show_tray()
         self.menu_open = self.pet_picker_open = True
-        self.language_picker_open = self.terminal_picker_open = self.companion_open = False
+        self.language_picker_open = self.terminal_picker_open = self.companion_open = self.workspace_open = False
         self.position_tray()
         self.tray.layout()
         self.tray.refresh()
@@ -994,7 +1193,7 @@ class App:
     def open_language_picker(self):
         self.show_tray()
         self.menu_open = self.language_picker_open = True
-        self.pet_picker_open = self.terminal_picker_open = self.companion_open = False
+        self.pet_picker_open = self.terminal_picker_open = self.companion_open = self.workspace_open = False
         self.position_tray()
         self.tray.layout()
         self.tray.refresh()
@@ -1025,7 +1224,8 @@ class App:
     def select_pet(self,pet_id):
         if not isinstance(pet_id,str) or pet_id not in PETS:
             return False
-        self.pet.pet_id = pet_id
+        self.default_pet=pet_id
+        self.apply_project_settings()
         session = self.current_session()
         self.pet.draw(time.monotonic(),session.provider if session else "Codex",self.reduced)
         self.save_preferences()
@@ -1033,7 +1233,8 @@ class App:
         return True
 
     def close_menu(self):
-        self.menu_open = self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = self.companion_open = False
+        self.menu_open = self.pet_picker_open = self.language_picker_open = self.terminal_picker_open = self.companion_open = self.workspace_open = False
+        self.tray.workspace.frame.place_forget()
         self.tray.companion_frame.place_forget()
         self.tray.terminal_frame.place_forget()
         self.tray.language_frame.place_forget()
@@ -1059,6 +1260,7 @@ class App:
         self.tray.refresh()
 
     def dock_right(self):
+        self.reveal_edge()
         area = self.work_area()
         self.pet_x,self.pet_y = area[2]-88,area[1]+(area[3]-area[1]-64)//2
         desktop.place(self.root,self.pet_x,self.pet_y,64,64)
@@ -1076,6 +1278,7 @@ class App:
         self.tray.refresh()
 
     def open_companion_settings(self):
+        self.workspace_open=False
         self.menu_open=self.companion_open=True
         self.pet_picker_open=self.language_picker_open=self.terminal_picker_open=False
         self.show_tray()
@@ -1123,12 +1326,16 @@ class App:
 
     def show_next_notice(self):
         if self.toast or not self.toast_queue or self.closed: return
-        if self.focus_until>time.time():
+        if self.focus_until>time.time() or self.presentation:
             self.toast_queue.clear()
             return
         self.toast_queue=self.toast_queue[-16:]
         kind,key,project=self.toast_queue.pop(0)
-        if not self.alerts.get(kind): return
+        if not self.notice_enabled(kind,key): return
+        self.reveal_edge()
+        event_session=next((s for s in self.sessions if s.key==key),None)
+        tone=self.projects.get(event_session).get("tone",self.tone)
+        speech="speech_"+kind if tone=="friendly" else "speech_"+tone+"_"+kind
         window=self.toast=tk.Toplevel(self.root)
         overlay_window(window,True)
         area=self.work_area()
@@ -1138,12 +1345,13 @@ class App:
             self.select_session(key)
         canvas=tk.Canvas(window,bg=KEY,highlightthickness=0)
         canvas.place(x=0,y=0,relwidth=1,relheight=1)
-        body=tk.Button(window,text=self.t("speech_"+kind,project=project[:40]),command=open_session,
+        body=tk.Button(window,text=self.t(speech,project=project[:40]),command=open_session,
                        bg=BG,fg=TEXT,activebackground=BG,activeforeground=MINT,
                        anchor="nw",justify="left",relief="flat",bd=0,padx=0,pady=0,
                        font=("Segoe UI",10),wraplength=width-52,cursor="hand2")
         body.update_idletasks()
-        height=max(92,body.winfo_reqheight()+54)+12
+        body_height=max(92,body.winfo_reqheight()+54)
+        height=body_height+12+44
         p=desktop.speech_placement(self.pet_x,self.pet_y,area,width,height)
         top,bottom=(0,height-12) if p["above"] else (12,height)
         edge=bottom-2 if p["above"] else top+2
@@ -1156,20 +1364,202 @@ class App:
         canvas.create_oval(17,top+17,22,top+22,fill=MINT,outline="")
         canvas.create_text(29,top+20,text=self.t.pet_name(self.pet.pet_id),anchor="w",fill=MINT,
                            font=("Segoe UI",9,"bold"))
-        body.place(x=17,y=top+36,width=width-51,height=height-12-48)
+        body.place(x=17,y=top+36,width=width-51,height=body_height-48)
         tk.Button(window,text="×",command=self.dismiss_notice,bg=BG,fg=MUTED,
                   activebackground=BG,activeforeground=TEXT,relief="flat",bd=0,
                   font=("Segoe UI",11),cursor="hand2").place(x=width-35,y=top+10,width=23,height=24)
+        actions=tk.Frame(window,bg=BG)
+        actions.place(x=17,y=top+body_height-3,width=width-34,height=38)
+        for column,(label,command) in enumerate([
+            ("action_session",open_session),
+            ("action_window",lambda:self.open_workspace_session(key,True)),
+            ("action_mute",lambda:self.mute_project(key))]):
+            button=tk.Button(actions,text=self.t(label),command=command,bg=CARD,fg=MINT,
+                             activebackground=BORDER,activeforeground=TEXT,relief="flat",bd=0,
+                             wraplength=max(50,(width-34)//3-8),font=("Segoe UI",8),cursor="hand2")
+            button.grid(row=0,column=column,sticky="nsew",padx=(0,3))
+            actions.columnconfigure(column,weight=1,uniform="actions")
+        actions.rowconfigure(0,weight=1)
         window.deiconify()
         desktop.place(window,p["x"],p["y"],width,height)
         desktop.speech_shape(window,width,height,p["tip"],p["above"],p["base"])
         self.toast_timer=self.root.after(5000,self.dismiss_notice)
 
+    def open_workspace(self,page="attention"):
+        if page not in WorkspacePanel.pages: return
+        self.workspace_page=page
+        self.menu_open=self.workspace_open=True
+        self.pet_picker_open=self.language_picker_open=self.terminal_picker_open=self.companion_open=False
+        self.show_tray()
+        self.position_tray()
+        self.tray.refresh()
+
+    def open_workspace_session(self,key,focus=False):
+        self.dismiss_notice()
+        if not any(s.key==key for s in self.sessions): return
+        self.select_session(key)
+        if focus: self.focus_selected_terminal()
+
+    def set_project_option(self,field,value):
+        if not self.projects.set(self.current_session(),field,value): return False
+        self.dismiss_notice()
+        self.apply_project_settings()
+        self.save_preferences()
+        self.tray.refresh()
+        return True
+
+    def mute_project(self,key):
+        session=next((s for s in self.sessions if s.key==key),None)
+        if session: self.projects.set(session,'muted',True)
+        self.dismiss_notice()
+        self.save_preferences()
+        self.tray.refresh()
+
+    def notice_enabled(self,kind,key):
+        if self.presentation or self.focus_until>time.time(): return False
+        session=next((s for s in self.sessions if s.key==key),None)
+        if not session: return False
+        options=self.projects.get(session)
+        return not options.get('muted',False) and options.get('alert.'+kind,self.alerts.get(kind,False))
+
+    def apply_project_settings(self):
+        self.pet.pet_id=self.projects.get(self.current_session()).get('pet',self.default_pet)
+        if not self.edge_enabled(): self.reveal_edge()
+
+    def toggle_history(self):
+        if self.history.enabled: self.history.disable()
+        else: self.history.enabled=True
+        self.save_preferences()
+        self.tray.workspace.refresh()
+
+    def clear_history(self):
+        self.history.records.clear()
+        self.save_preferences()
+        self.tray.workspace.refresh()
+
+    def cycle_tone(self):
+        self.tone=TONES[(TONES.index(self.tone)+1)%len(TONES)]
+        self.save_preferences()
+        self.tray.refresh()
+
+    def toggle_presentation(self):
+        self.presentation=not self.presentation
+        self.dismiss_notice()
+        self.toast_queue.clear()
+        self.pet_tooltip.hide()
+        if self.terminal_picker_open: self.close_menu()
+        self.tray.keys=[]
+        self.tray.workspace.signature=None
+        self.tray.workspace.refresh()
+        self.refresh_now()
+
+    def edge_enabled(self):
+        return self.projects.get(self.current_session()).get('edge',self.edge_mode)
+
+    def toggle_edge(self):
+        self.edge_mode=not self.edge_mode
+        self.reveal_edge()
+        self.save_preferences()
+        self.tray.refresh()
+
+    def reveal_edge(self):
+        if not self.edge_hidden: return
+        self.edge_hidden=False
+        self.edge_idle_since=None
+        desktop.place(self.root,self.pet_x,self.pet_y,64,64)
+        desktop.shape(self.root,64,64)
+
+    def update_edge(self,x,y,now):
+        if self.edge_hidden:
+            if not self.edge_enabled(): self.reveal_edge()
+            return
+        if (not self.edge_enabled() or self.drag or self.tray_visible or self.toast or
+            now<self.edge_reveal_until or desktop.contains(self.root,x,y)):
+            self.edge_idle_since=None
+            return
+        target=desktop.edge_position(self.pet_x,self.pet_y,self.work_area())
+        if target is None:
+            self.edge_idle_since=None
+            return
+        if self.edge_idle_since is None: self.edge_idle_since=now
+        elif now-self.edge_idle_since>=1:
+            self.pet_tooltip.hide()
+            self.edge_hidden=True
+            desktop.edge_shape(self.root,target[0]<self.pet_x)
+            desktop.place(self.root,*target,64,64)
+
+    def start_update_task(self,kind,work):
+        if self.update_busy: return
+        self.update_busy=True
+        self.update_status={'check':'checking','download':'downloading','install':'verifying'}[kind]
+        self.tray.refresh()
+        def run():
+            try: result=work()
+            except Exception:
+                logging.exception('Update task failed')
+                self.update_results.put(('failed',None))
+            else: self.update_results.put((kind,result))
+        threading.Thread(target=run,daemon=True,name='update-'+kind).start()
+
+    def check_updates(self):
+        self.start_update_task('check',lambda:updater.check_latest(VERSION))
+
+    def download_update(self):
+        if not self.update_info: return
+        info=dict(self.update_info)
+        self.start_update_task('download',lambda:updater.stage_release(info,self.preferences_path.parent))
+
+    def install_update(self):
+        if not self.staged_update: return
+        staged=dict(self.staged_update)
+        self.start_update_task('install',lambda:updater.verify_stage(staged))
+
+    def check_update_results(self):
+        try: kind,result=self.update_results.get_nowait()
+        except queue.Empty: return
+        self.update_busy=False
+        if kind=='failed':
+            self.update_status='failed'
+            self.staged_update=None
+        elif kind=='check':
+            self.update_info=result
+            self.staged_update=None
+            self.update_status='available' if result else 'current'
+        elif kind=='download':
+            self.staged_update=result
+            self.update_status='ready'
+        elif kind=='install':
+            try:
+                started=terminal.process_start(os.getpid())
+                if not started: raise OSError('Cannot identify current instance')
+                root=Path(result)
+                command=[str(root/'runtime/pythonw.exe'),str(Path(updater.__file__).resolve()),
+                         '--apply',str(self.preferences_path.parent.resolve()),str(root),str(os.getpid()),str(started),
+                         '--language',self.t.language]
+                subprocess.Popen(command,cwd=self.preferences_path.parent,creationflags=subprocess.CREATE_NO_WINDOW)
+            except (OSError,ValueError):
+                logging.exception('Cannot start update helper')
+                self.update_status='failed'
+            else:
+                self.close(immediate=True)
+                return
+        if not self.closed: self.tray.refresh()
+
+    def open_app_folder(self):
+        os.startfile(str(self.preferences_path.parent.resolve()))
+
+    def open_release_page(self):
+        if self.update_info and self.update_info['url'].startswith(updater.REPOSITORY+'/releases/tag/'):
+            webbrowser.open(self.update_info['url'])
+
     def save_preferences(self):
-        data = {"pet":[self.pet_x,self.pet_y],"sound":self.sound,"topmost":self.topmost,"pet_kind":self.pet.pet_id,"language":self.language,
+        data = {"pet":[self.pet_x,self.pet_y],"sound":self.sound,"topmost":self.topmost,"pet_kind":self.default_pet,"language":self.language,
                 "favorites":sorted(self.favorites),"selected":self.selected or self.restored_selection,
                 "alerts":self.alerts,"focus_until":self.focus_until,"hotkey":self.hotkey_name,
-                "window_profiles":self.window_profiles,"activity":self.activity.days}
+                "window_profiles":self.window_profiles,"activity":self.activity.days,
+                "projects":self.projects.values,"tone":self.tone,"edge_mode":self.edge_mode,
+                "presentation":self.presentation,"history_enabled":self.history.enabled,
+                "history":self.history.records if self.history.enabled else []}
         serialized=json.dumps(data)
         if serialized==self.last_preferences: return
         temporary = self.preferences_path.with_suffix(".tmp")
@@ -1185,8 +1575,10 @@ class App:
             if immediate and not self.exit_finished:
                 self.finish_close()
             return
+        self.reveal_edge()
         self.closed = True
         self.hotkey.close()
+        self.presentation_hotkey.close()
         self.pet_tooltip.hide()
         self.dismiss_notice()
         self.toast_queue.clear()

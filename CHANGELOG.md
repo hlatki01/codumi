@@ -1,5 +1,18 @@
 ﻿# Changelog
 
+## v0.3.0 — Attention when it matters (unreleased)
+
+- Live attention queue with explicit session and window actions.
+- Optional local completion history, limited to 100 entries and 30 days, excluding prompts and transcript paths.
+- Session, window, and project-mute actions inside speech bubbles.
+- Per-project pets, voice, individual notice overrides, muting, and edge behavior.
+- Edge tucking with shaped hit regions, hover reveal, and preserved logical position.
+- Persistent presentation mode and a Ctrl+Alt+P shortcut; private fields and notices are hidden inside codumi.
+- Direct, friendly, and playful local message templates in all six languages.
+- Manual HTTPS release checks, notes, SHA-256 validation, safe ZIP staging, and preference-preserving restart into a separate build.
+- A shared updates area across repeated upgrades and retention of the previous build for rollback.
+- Scrollable attention/history/project/update pages, with controls stable while unrelated sessions change.
+
 ## v0.2.2 ? A better place to talk
 
 - Speech bubbles prefer a position above and to the left of the pet.

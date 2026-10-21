@@ -30,7 +30,7 @@ for name in ("Lib", "DLLs", "tcl"):
 for pattern in ("pythonw.exe", "python.exe", "python*.dll", "vcruntime*.dll", "LICENSE.txt"):
     for path in base.glob(pattern):
         shutil.copy2(path, runtime / path.name)
-for name in ("app.py", "sessions.py", "desktop.py", "pet.py", "i18n.py", "terminal.py", "companion.py", "locales.json", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "THIRD_PARTY.md", "VALIDATION.md", "Fechar.cmd"):
+for name in ("app.py", "sessions.py", "desktop.py", "pet.py", "i18n.py", "terminal.py", "companion.py", "updater.py", "locales.json", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE", "THIRD_PARTY.md", "VALIDATION.md", "Fechar.cmd"):
     shutil.copy2(root / name, output / name)
 if (root / "docs").is_dir():
     shutil.copytree(root / "docs", output / "docs")
@@ -38,7 +38,7 @@ subprocess.run([str(compiler), "/nologo", "/target:winexe",
                 "/reference:System.Windows.Forms.dll", "/out:" + str(output / "codumi.exe"),
                 str(root / "Launcher.cs")], check=True)
 subprocess.run([str(runtime / "python.exe"), "-B", "-c",
-                "import tkinter, app, desktop, pet, sessions, i18n, terminal, companion; r=tkinter.Tk(); r.withdraw(); r.destroy()"],
+                "import tkinter, app, desktop, pet, sessions, i18n, terminal, companion, updater; r=tkinter.Tk(); r.withdraw(); r.destroy()"],
                cwd=output, check=True)
 archive = output.parent / (output.name + "-x64.zip")
 with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:

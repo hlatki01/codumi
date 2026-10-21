@@ -62,3 +62,81 @@ class Activity:
 
     def today(self):
         return self.days.get(datetime.now().strftime('%Y-%m-%d'),[0]*5)
+
+
+TONES=('direct','friendly','playful')
+
+
+def session_hash(session):
+    return hashlib.sha256(session.key.encode('utf-8')).hexdigest()
+
+
+def attention_queue(sessions):
+    return sorted((s for s in sessions if s.state in {'waiting','error'}),
+                  key=lambda s:(s.state!='error',-s.updated))
+
+
+class ProjectPreferences:
+    def __init__(self,saved=None):
+        self.values={}
+        if isinstance(saved,dict):
+            for identity,options in saved.items():
+                if isinstance(identity,str) and len(identity)==64 and isinstance(options,dict):
+                    clean={}
+                    for field,value in options.items():
+                        if self.valid(field,value): clean[field]=value
+                    if clean: self.values[identity]=clean
+
+    @staticmethod
+    def valid(field,value):
+        if not isinstance(field,str): return False
+        from pet import PETS
+        if field=='pet': return isinstance(value,str) and value in PETS
+        if field=='tone': return isinstance(value,str) and value in TONES
+        return field in {'edge','muted','alert.complete','alert.error','alert.waiting'} and type(value) is bool
+
+    def get(self,session):
+        return self.values.get(project_id(session),{}) if session else {}
+
+    def set(self,session,field,value):
+        if not session or (value is not None and not self.valid(field,value)): return False
+        if field not in {'pet','tone','edge','muted','alert.complete','alert.error','alert.waiting'}: return False
+        identity=project_id(session)
+        options=dict(self.values.get(identity,{}))
+        if value is None: options.pop(field,None)
+        else: options[field]=value
+        if options: self.values[identity]=options
+        else: self.values.pop(identity,None)
+        return True
+
+
+class CompletionHistory:
+    """Optional bounded metadata, never transcript paths or prompts."""
+    def __init__(self,enabled=False,saved=None):
+        self.enabled=enabled is True
+        self.records=[]
+        if self.enabled and isinstance(saved,list):
+            for record in saved[-100:]:
+                if not isinstance(record,dict): continue
+                if (all(isinstance(record.get(k),str) and len(record[k])==64 for k in ('id','session','project'))
+                    and isinstance(record.get('name'),str) and len(record['name'])<=80
+                    and isinstance(record.get('provider'),str) and record['provider'] in {'Claude','Codex','Cursor'}
+                    and type(record.get('time')) in (int,float) and 0<record['time']<=time.time()+60):
+                    self.records.append({k:record[k] for k in ('id','session','project','name','provider','time')})
+        self.prune()
+
+    def prune(self):
+        self.records=[r for r in self.records if 0<=time.time()-r['time']<30*86400][-100:]
+
+    def add(self,session):
+        if not self.enabled or not session.completed: return
+        self.prune()
+        identity=hashlib.sha256((session.key+'\0'+str(session.completed)).encode('utf-8')).hexdigest()
+        if any(r['id']==identity for r in self.records): return
+        self.records.append({'id':identity,'session':session_hash(session),'project':project_id(session),
+                             'name':session.project[:80],'provider':session.provider,'time':session.completed})
+        self.prune()
+
+    def disable(self):
+        self.enabled=False
+        self.records.clear()

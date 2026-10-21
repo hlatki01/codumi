@@ -4,7 +4,7 @@ Validation environment: Windows x64, Python 3.12 with Tcl/Tk and the bundled por
 
 ## Automated checks
 
-49 unit tests cover:
+68 unit tests cover:
 
 - Incremental Claude/Codex reading, malformed records, truncation, replacement, incomplete UTF-8, and bounded discovery.
 - Real transcript events for thinking and completion.
@@ -54,6 +54,14 @@ The portable launcher passed its demo smoke test. Release archives are checked a
 ## v0.2.1 speech bubbles
 
 `check_speech.py` verifies all three first-person messages in all six languages, text fit, above-left placement with a slanted tail, fallback at the top edge, negative monitor coordinates, edge clamping, transparent hit regions, the tail region, session activation, and dismissal. The full 49-test unit suite also passes.
+
+## v0.3 workflow and update checks
+
+- Nineteen additional unit tests cover attention ordering, override validation and inheritance, opt-in history privacy, deduplication and retention, presentation shortcut registration, edge coordinates, release parsing, response bounds, checksums, archive traversal/symlinks/case aliases/personal files, staging tampering, preference transfer, repeated-update layout, failed parent waits, and HTTPS redirect restrictions.
+- `check_workflow.py` exercises all four workspace pages in six languages; project pets and global inheritance; stable project controls during unrelated updates; opening an otherwise-filtered session; history and presentation masking; all three voices and speech actions; edge clipping/reveal with saved position; small-screen scrolling; persistence; and a mocked check/download/verification/restart lifecycle.
+- A live public GitHub check and download of v0.2.2 passed in a temporary test installation. Its real checksum, archive, staged contents, and transfer of fictional preferences were verified. The installed stable app was not modified.
+- The actual restart helper's wait/failure and launch routing are covered with mocks; a real upgrade that closes a user's running instance was not performed for this PR.
+- Presentation mode masks data inside codumi only. Screens in terminals, editors, or other applications are not changed. Existing shortcuts continue pointing to their original build after an assisted update.
 
 ## Important limits
 

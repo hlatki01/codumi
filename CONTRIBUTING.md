@@ -29,6 +29,8 @@ Run the unit tests, then the native checks relevant to your change:
 - Pets and animations: test_pet_catalog.py, test_exit.py, check_pet_motion.py, check_exit.py.
 - Languages and settings: test_i18n.py, check_locales.py, check_settings_reaction.py.
 - Terminal discovery and selection: test_terminal.py, check_terminal.py, check_terminal_picker.py.
+- Workflow pages, project overrides, history, privacy, and edge behavior: test_workflow.py, check_workflow.py.
+- Update parsing, verification, staging, and preference transfer: test_updater.py. Use fictional preferences and temporary folders; never replace the running stable app in a test.
 - General desktop interactions: check_ui.py.
 
 Run tests with python -m unittest discover -v; run each native check script separately. Explain any environment restriction instead of marking an untested behavior as verified.

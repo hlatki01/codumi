@@ -48,6 +48,13 @@ def speech_placement(x,y,area,width,height):
     return dict(x=bx,y=by,width=width,height=height,tip=tip,base=base,above=above)
 
 
+def edge_position(x,y,area):
+    left,top,right,bottom=area
+    if x-left<=32: return left-38,y
+    if right-(x+64)<=32: return right-26,y
+    return None
+
+
 class Spring:
     def __init__(self):
         self.value = self.velocity = self.target = 0.0
@@ -88,6 +95,7 @@ if WINDOWS:
         (gdi, "CreateEllipticRgn", [c.c_int] * 4, w.HANDLE),
         (gdi, "CreateRoundRectRgn", [c.c_int] * 6, w.HANDLE),
         (gdi, "CreatePolygonRgn", [c.POINTER(w.POINT), c.c_int, c.c_int], w.HANDLE),
+        (gdi, "CreateRectRgn", [c.c_int,c.c_int,c.c_int,c.c_int], w.HANDLE),
         (gdi, "CombineRgn", [w.HANDLE, w.HANDLE, w.HANDLE, c.c_int], c.c_int),
         (gdi, "DeleteObject", [w.HANDLE], w.BOOL),
         (gdi, "PtInRegion", [w.HANDLE, c.c_int, c.c_int], w.BOOL),
@@ -211,7 +219,7 @@ class GlobalHotkey:
     def set(self,name):
         if not self.close(): return False
         if name=="Off": return True
-        choices={"Ctrl+Alt+N":(0x4003,0x4e),"Ctrl+Shift+F12":(0x4006,0x7b),"Ctrl+Alt+Space":(0x4003,0x20)}
+        choices={"Ctrl+Alt+N":(0x4003,0x4e),"Ctrl+Alt+P":(0x4003,0x50),"Ctrl+Shift+F12":(0x4006,0x7b),"Ctrl+Alt+Space":(0x4003,0x20)}
         if not WINDOWS or name not in choices: return False
         ready=threading.Event()
         def listen():
@@ -267,3 +275,16 @@ def speech_shape(window,width,height,tip,above,base):
     finally:
         if region: gdi.DeleteObject(region)
         if tail: gdi.DeleteObject(tail)
+
+
+def edge_shape(window,left):
+    if not WINDOWS: return
+    region=gdi.CreateEllipticRgn(0,0,64,64)
+    clip=gdi.CreateRectRgn(38,0,64,64) if left else gdi.CreateRectRgn(0,0,26,64)
+    try:
+        if not region or not clip or not gdi.CombineRgn(region,region,clip,1): raise c.WinError()
+        if not user.SetWindowRgn(handle(window),region,True): raise c.WinError()
+        region=None
+    finally:
+        if region: gdi.DeleteObject(region)
+        if clip: gdi.DeleteObject(clip)
