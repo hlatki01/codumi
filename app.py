@@ -27,6 +27,14 @@ MUTED = "#8ca5be"
 KEY = "#ff00ff"
 
 
+def compact_tokens(count):
+    if count>=1_000_000:
+        return f"{count//100_000/10:.1f}".rstrip("0").rstrip(".")+"M"
+    if count>=1_000:
+        return f"{count//100/10:.1f}".rstrip("0").rstrip(".")+"K"
+    return str(count)
+
+
 def load_preferences(path):
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -325,6 +333,9 @@ class HoverTray:
         c.create_text(origin+70, 57, text=self.t("tagline"), fill=MUTED, anchor="w", font=("Segoe UI", 9))
         c.create_line(origin+23, 80, end-23, 80, fill=BORDER)
         c.create_text(origin+24, 106, text=self.t("settings") if self.app.menu_open else self.t("recent_sessions"), anchor="w", fill=MUTED, font=("Segoe UI", 9))
+        if not self.app.menu_open:
+            c.create_text(origin+24,123,text=self.t("pet_session_note"),anchor="w",
+                          fill=MUTED,font=("Segoe UI",8))
         c.create_line(origin+23, h-62, end-23, h-62, fill=BORDER)
         active = sum(s.display_state() not in {"idle", "sleeping"} for s in self.app.sessions)
         resting = len(self.app.sessions)-active
@@ -381,7 +392,10 @@ class HoverTray:
         for s in visible:
             button, marker, _ = self.rows[s.key]
             state = s.display_state()
-            button.configure(text=f"{self.app.project_name(s)[:26]}\n{s.provider}  ·  {self.t.state(state)}",
+            usage = ("≥" if s.tokens_partial else "")+compact_tokens(s.tokens)
+            suffix = "  ·  "+self.t("tokens_short",count=usage) if s.tokens else ""
+            button.configure(text=f"{self.app.project_name(s)[:26]}\n{s.provider}  ·  {self.t.state(state)}{suffix}",
+                             wraplength=max(100,(self.placement["width"] if self.placement else 364)-114),
                              fg=MUTED if state in {"idle", "sleeping"} else TEXT)
             marker.configure(bg=COLORS[state])
         p = self.placement
@@ -396,7 +410,7 @@ class HoverTray:
         self.terminal_notice.configure(text=self.t(self.app.terminal_status) if self.app.terminal_status else "")
         duration = max(0, int(time.time() - session.started)) if session else 0
         self.meta.configure(text=(self.t("duration",time=f"{duration//3600:02d}:{duration//60%60:02d}:{duration%60:02d}")
-                            + (" · "+self.t("tokens",count=session.tokens) if session.tokens else "")) if session else self.t("no_selection"))
+                            + (" · "+("≥" if session.tokens_partial else "")+self.t("tokens",count=session.tokens) if session.tokens else "")) if session else self.t("no_selection"))
         self.prompt_label.configure(text=session.prompt[:120] if session and session.prompt else self.t("no_prompt"))
         self.feed_label.configure(text=self.t.warning(self.app.warning) or "\n".join(
             f"{time.strftime('%H:%M',time.localtime(t))}   {self.t.event(label)[:32]}" for t,label in list(session.events)[-3:])
@@ -678,9 +692,15 @@ class App:
     def select_session(self,key):
         if not any(s.key==key for s in self.sessions):
             return
+        details = key!=self.selected or not self.tray.details
         self.selected = key
+        self.terminal_pending = self.terminal_requested = None
+        self.terminal_status = ""
+        self.close_menu()
+        self.tray.details = details
+        self.position_tray()
+        self.show_tray()
         self.refresh_now()
-        self.focus_selected_terminal()
 
     def focus_selected_terminal(self):
         session = self.current_session()

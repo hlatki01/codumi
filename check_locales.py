@@ -24,6 +24,10 @@ with tempfile.TemporaryDirectory() as folder:
             tagline=next(item for item in tray.canvas.find_all()
                          if tray.canvas.type(item)=="text" and tray.canvas.itemcget(item,"text")==app.t("tagline"))
             assert tray.canvas.bbox(tagline)[2]<=tray.placement["width"]-32,language
+            note=next(item for item in tray.canvas.find_all()
+                      if tray.canvas.type(item)=="text" and tray.canvas.itemcget(item,"text")==app.t("pet_session_note"))
+            assert tray.canvas.bbox(note)[2]<=tray.placement["width"]-32,language
+            assert tray.canvas.bbox(note)[3]<tray.session_canvas.winfo_y(),language
             counts=next(item for item in tray.canvas.find_all()
                         if tray.canvas.type(item)=="text" and "\n" in tray.canvas.itemcget(item,"text"))
             assert tray.canvas.bbox(counts)[2]<tray.activity_button.winfo_x(),language

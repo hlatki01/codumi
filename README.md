@@ -1,4 +1,4 @@
-﻿# codumi ●
+# codumi ●
 
 **Your little coding companion.**
 
@@ -41,8 +41,8 @@ The pet represents the selected session. Its animations never change the agent's
 | Open settings | Click **···** or right-click the pet |
 | Change pets | Open settings and choose **Pet** |
 | Change language | Open settings and choose **Language** |
-| Inspect a session | Select it, then open **Activity** |
-| Focus its terminal | Select the session or click **Focus terminal** |
+| Inspect a session | Click it to show details; click it again to collapse |
+| Focus its terminal | Select the session, then click **Focus terminal** |
 | Choose a terminal manually | **Activity → Choose terminal window… → Use this window** |
 | Quit | Click **×**, choose **Quit codumi**, or press **Ctrl+Q** in the panel |
 
@@ -79,7 +79,11 @@ The reader runs in a background thread. It discovers up to 48 recently updated s
 
 It does not install agent hooks, modify conversations, read authentication files, or send session data over the network. Prompts are displayed locally. Preferences are saved beside the app in `preferences.json`; diagnostic errors go to `codumi.log`. Neither belongs in Git or release archives.
 
-States depend on the events the agent records. Missing permission or reasoning events cannot be inferred reliably. Five minutes without new records makes a session appear resting; that does not prove its process has exited. Token totals are shown when the Codex transcript provides them.
+States depend on the events the agent records. Missing permission or reasoning events cannot be inferred reliably. Five minutes without new records makes a session appear resting; that does not prove its process has exited. Token usage appears immediately after the session state, for example **Working · 128K tokens**. Codex uses the transcript's cumulative total. Claude sums input, output, cache-creation, and cache-read usage once per message, merging repeated streaming records.
+
+Large Claude histories are counted in bounded background chunks without replacing live session state. A **≥** prefix means older records are still being counted. Click the session for the unabridged number; click it again to collapse its details. If no usage was recorded, the app does not invent a token count. Totals reflect available valid records; oversized or malformed records are skipped by the reader.
+
+Claude's input/cache fields follow the [documented usage breakdown](https://platform.claude.com/docs/en/build-with-claude/prompt-caching). These are processed-token totals across requests, not the current context-window size.
 
 ## Run from source
 
@@ -108,6 +112,7 @@ python check_settings_reaction.py
 python check_terminal.py
 python check_terminal_picker.py
 python check_exit.py
+python check_tokens.py
 python app.py --demo --smoke-test
 ```
 

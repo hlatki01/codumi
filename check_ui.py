@@ -91,13 +91,27 @@ with tempfile.TemporaryDirectory() as folder:
         pump(app,.15)
         assert app.spring.value==1
         app.tray.rows["demo-codex"][0].invoke()
-        assert app.selected=="demo-codex"
+        assert app.selected=="demo-codex" and app.tray.details
+        app.terminal_pending = app.selected
+        app.terminal_requested = app.selected
+        app.tray.rows["demo-codex"][0].invoke()
+        assert not app.tray.details and app.selected=="demo-codex"
+        app.terminal_results.put(("demo-codex",(100,200,300)))
+        app.check_terminal_result()
+        assert not app.tray.details, "old terminal lookup reopened collapsed details"
+        assert app.terminal_pending is None and app.terminal_requested is None
+        app.tray.rows["demo-claude"][0].invoke()
+        assert app.selected=="demo-claude" and app.tray.details
+        app.tray.rows["demo-codex"][0].invoke()
+        assert app.selected=="demo-codex" and app.tray.details
+        assert app.tray_visible
         app.tray.toggle_filter()
         assert len(app.tray.rows)==1
         app.tray.toggle_filter()
         assert len(app.tray.rows)==3
         app.select_session("demo-claude")
-        app.toggle_details()
+        assert not app.tray.details
+        app.select_session("demo-claude")
         pump(app)
         assert app.tray.details and app.tray.detail_frame.winfo_ismapped()
         assert app.tray.window.winfo_x()+app.tray.placement["width"]==app.pet_x

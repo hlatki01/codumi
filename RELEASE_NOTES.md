@@ -6,6 +6,8 @@ This first public release includes ten animated pets, a connected hover tray, lo
 
 Hover to see sessions, drag to reposition your pet, and open settings to choose its appearance and language. While working, it follows your cursor with its eyes. Four quick clicks trigger a brief fall-and-cry reaction; quitting plays an animated goodbye.
 
+Click a session to expand its details, then click it again to collapse them. Token totals appear immediately after its status for both Claude and Codex; a partial-count marker indicates that older Claude history is still being counted. The pet follows the selected session.
+
 ## Download
 
 Download **codumi-v0.1.0-windows-x64.zip**, extract the entire folder, and open **codumi.exe**. No Python installation, account, or API key is required.
@@ -26,4 +28,4 @@ Foreground activation and Codex's Restart Manager lookup still need broader vali
 
 ## Validation
 
-34 unit tests passed. Native checks cover hover, dragging, transparent hit regions, session controls, six-language layouts, all ten pets, click reactions, window selection, and animated exit. The portable launcher passed its smoke test.
+40 unit tests passed. Native checks cover hover, dragging, transparent hit regions, session controls, six-language layouts, all ten pets, click reactions, window selection, and animated exit. The portable launcher passed its smoke test.

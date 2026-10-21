@@ -7,7 +7,9 @@
 - Local Claude Code and Codex session monitoring.
 - State animations, hover jumps, cursor-tracking eyes, repeated-click reactions, and an animated goodbye.
 - English, Portuguese, Spanish, French, German, and Italian, with automatic Windows display-language detection and manual selection.
-- Session activity, filtering, available token totals, and original-terminal focus attempts.
+- Session activity, filtering, click-to-expand details, and original-terminal focus attempts.
+- Claude and Codex token totals beside session status, with deduplicated Claude cache usage and bounded historical backfill.
+- A translated explanation that the pet follows the selected session.
 - Terminal-host ancestor discovery and manual window association for ambiguous cases.
 - Keyboard navigation, transparent hit regions, and Windows reduced-motion support.
 - Portable Windows x64 build with bundled Python/Tcl/Tk.

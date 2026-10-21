@@ -1,10 +1,10 @@
-﻿# Validation
+# Validation
 
 Validation environment: Windows x64, Python 3.12 with Tcl/Tk and the bundled portable runtime.
 
 ## Automated checks
 
-34 unit tests cover:
+40 unit tests cover:
 
 - Incremental Claude/Codex reading, malformed records, truncation, replacement, incomplete UTF-8, and bounded discovery.
 - Real transcript events for thinking and completion.
@@ -33,6 +33,15 @@ The native checks passed on an isolated desktop using temporary preferences and 
 WindowFromPoint checks confirm that transparent corners reach the underlying test window and the exit overlay does not intercept input.
 
 The portable launcher passed its demo smoke test. Release archives are checked against the source and exclude preferences, logs, caches, and personal session data.
+
+## Session interaction and usage
+
+- A session click opens its details; a second click on the same session collapses them. Switching sessions keeps details open and updates their content.
+- Session selection cancels pending terminal activation; only the explicit Focus terminal action opens that workflow.
+- Claude totals include input, output, cache creation, and cache reads, deduplicated by message ID with per-field streaming maxima. Codex totals remain cumulative.
+- Six usage regression tests cover repeated records, malformed counters, UUID fallback, history/tail overlap, truncation, snapshot isolation, and compact labels.
+- check_tokens.py verifies status-then-token order, exact detail totals, partial-count markers, six-language wrapping, and session click toggling.
+- Historical token backfill reads at most one additional bounded chunk per Claude session per poll; it never replaces the live prompt, status, or event stream.
 
 ## Important limits
 

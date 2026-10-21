@@ -45,6 +45,8 @@ class Session:
     tokens: int = 0
     completed: float = 0.0
     events: deque = field(default_factory=lambda: deque(maxlen=6))
+    tokens_partial: bool = False
+    _claude_usage: dict = field(default_factory=dict,repr=False,compare=False)
 
     @property
     def project(self):
@@ -110,6 +112,7 @@ class Session:
                 else:
                     self.prompt = text_content(blocks)[:240]
             elif kind == "assistant":
+                self.add_claude_tokens(record)
                 state, label = "working", "Respondendo"
                 tools = [b for b in blocks if isinstance(b, dict) and b.get("type") == "tool_use"] if isinstance(blocks, list) else []
                 if tools:
@@ -133,8 +136,41 @@ class Session:
 
     def set_tokens(self, usage):
         total = usage.get("total_tokens") if isinstance(usage, dict) else None
-        if isinstance(total, int) and total >= 0:
+        if type(total) is int and 0<=total<2**63:
             self.tokens = max(self.tokens, total)
+
+    def add_claude_tokens(self, record):
+        if not isinstance(record,dict) or record.get("type")!="assistant":
+            return
+        message=record.get("message")
+        if not isinstance(message,dict) or not isinstance(message.get("usage"),dict):
+            return
+        identity=message.get("id") or record.get("uuid")
+        if not isinstance(identity,str) or not 0<len(identity)<=256:
+            return
+        usage=message["usage"]
+        fields=("input_tokens","output_tokens","cache_creation_input_tokens","cache_read_input_tokens")
+        previous=self._claude_usage.get(identity,(0,0,0,0))
+        current=tuple(max(old,value) if type(value) is int and 0<=value<2**63 else old
+                      for old,value in zip(previous,(usage.get(key,0) for key in fields)))
+        self.tokens+=sum(current)-sum(previous)
+        self._claude_usage[identity]=current
+
+
+def read_lines(path,offset,skip):
+    """Read at most one bounded chunk and commit only complete lines."""
+    with path.open("rb") as handle:
+        handle.seek(offset)
+        data=handle.read(LIMIT)
+    if not data:
+        return [],offset,skip
+    end=data.rfind(b"\n")
+    if end<0:
+        return ([],offset+len(data),True) if len(data)==LIMIT else ([],offset,skip)
+    lines=data[:end].split(b"\n")
+    if skip:
+        lines=lines[1:]
+    return lines,offset+end+1,False
 
 
 class Tail:
@@ -146,6 +182,9 @@ class Tail:
         self.offset = max(0, stat.st_size - LIMIT)
         self.skip = self.offset > 0
         self.session = Session(str(path), provider, started=stat.st_mtime, updated=stat.st_mtime)
+        self.usage_offset,self.usage_skip=0,False
+        self.usage_target=self.offset if provider=="Claude" else 0
+        self.session.tokens_partial=self.usage_target>0
         with path.open("rb") as handle:
             first = handle.readline(65536)
         try:
@@ -157,27 +196,20 @@ class Tail:
         stat = self.path.stat()
         if stat.st_size < self.offset or self.identity != (stat.st_dev, stat.st_ino):
             self.__init__(self.path, self.session.provider)
-        with self.path.open("rb") as handle:
-            handle.seek(self.offset)
-            data = handle.read(LIMIT)
-        if not data:
-            return
-        end = data.rfind(b"\n")
-        if end < 0:
-            if len(data) == LIMIT:
-                self.offset += len(data)
-                self.skip = True
-            return
-        self.offset += end + 1
-        lines = data[:end].split(b"\n")
-        if self.skip:
-            lines = lines[1:]
-            self.skip = False
+        lines,self.offset,self.skip=read_lines(self.path,self.offset,self.skip)
         for line in lines:
             try:
                 self.session.apply(json.loads(line), stat.st_mtime)
             except (ValueError, UnicodeDecodeError, TypeError, RecursionError):
                 continue
+        if self.session.tokens_partial:
+            lines,self.usage_offset,self.usage_skip=read_lines(self.path,self.usage_offset,self.usage_skip)
+            for line in lines:
+                try:
+                    self.session.add_claude_tokens(json.loads(line))
+                except (ValueError, UnicodeDecodeError, TypeError, RecursionError):
+                    continue
+            self.session.tokens_partial=self.usage_offset<self.usage_target
 
 
 class Monitor:
@@ -220,5 +252,5 @@ class Monitor:
             except OSError:
                 warnings.append("Uma sessão está temporariamente inacessível.")
         self.warning = " ".join(dict.fromkeys(warnings))
-        return sorted((replace(t.session, events=deque(t.session.events, maxlen=6))
+        return sorted((replace(t.session, events=deque(t.session.events, maxlen=6),_claude_usage=t.session._claude_usage.copy())
                        for t in self.tails.values()), key=lambda s: s.updated, reverse=True)

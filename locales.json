@@ -28,7 +28,7 @@
     "sound_on": "Enable completion sound",
     "topmost_off": "Disable always on top",
     "topmost_on": "Enable always on top",
-    "session_tip": "{project}\n{provider} · Select and focus the original terminal.",
+    "session_tip": "{project}\n{provider} · Click to show details; click again to hide.",
     "no_active": "No active sessions.\nChoose All to see recent sessions.",
     "no_sessions": "Your next prompt appears here.\nOpen Claude Code or Codex.",
     "duration": "{time} elapsed",
@@ -80,7 +80,9 @@
     "tagline": "Your little coding companion.",
     "choose_terminal": "Choose terminal window…",
     "choose_terminal_tip": "Select the window where this session is running. The link lasts while codumi is open.",
-    "confirm_terminal": "Use this window"
+    "confirm_terminal": "Use this window",
+    "pet_session_note": "The pet follows the selected session.",
+    "tokens_short": "{count} tokens"
   },
   "pt": {
     "tray_title": "Sessões e atividade",
@@ -111,7 +113,7 @@
     "sound_on": "Ativar som de conclusão",
     "topmost_off": "Desativar sempre visível",
     "topmost_on": "Ativar sempre visível",
-    "session_tip": "{project}\n{provider} · Selecionar e focar o terminal original.",
+    "session_tip": "{project}\n{provider} · Clique para ver detalhes; clique novamente para recolher.",
     "no_active": "Nenhuma sessão em atividade.\nUse Todas para ver as recentes.",
     "no_sessions": "Seu próximo pedido aparece aqui.\nAbra o Claude Code ou o Codex.",
     "duration": "{time} de sessão",
@@ -163,7 +165,9 @@
     "tagline": "Seu pequeno companheiro de código.",
     "choose_terminal": "Escolher janela do terminal…",
     "choose_terminal_tip": "Selecione a janela onde esta sessão está rodando. A associação vale enquanto o codumi estiver aberto.",
-    "confirm_terminal": "Usar esta janela"
+    "confirm_terminal": "Usar esta janela",
+    "pet_session_note": "O pet acompanha a sessão selecionada.",
+    "tokens_short": "{count} tokens"
   },
   "es": {
     "tray_title": "Sesiones y actividad",
@@ -194,7 +198,7 @@
     "sound_on": "Activar sonido de finalización",
     "topmost_off": "Desactivar siempre visible",
     "topmost_on": "Activar siempre visible",
-    "session_tip": "{project}\n{provider} · Seleccionar y enfocar el terminal original.",
+    "session_tip": "{project}\n{provider} · Pulsa para ver detalles; pulsa de nuevo para ocultarlos.",
     "no_active": "No hay sesiones activas.\nElige Todas para ver las recientes.",
     "no_sessions": "Tu próxima solicitud aparecerá aquí.\nAbre Claude Code o Codex.",
     "duration": "{time} de sesión",
@@ -246,7 +250,9 @@
     "tagline": "Tu pequeño compañero de código.",
     "choose_terminal": "Elegir ventana del terminal…",
     "choose_terminal_tip": "Selecciona la ventana donde se ejecuta esta sesión. El vínculo dura mientras codumi esté abierto.",
-    "confirm_terminal": "Usar esta ventana"
+    "confirm_terminal": "Usar esta ventana",
+    "pet_session_note": "El pet sigue la sesión seleccionada.",
+    "tokens_short": "{count} tokens"
   },
   "fr": {
     "tray_title": "Sessions et activité",
@@ -277,7 +283,7 @@
     "sound_on": "Activer le son de fin",
     "topmost_off": "Désactiver le premier plan",
     "topmost_on": "Activer le premier plan",
-    "session_tip": "{project}\n{provider} · Sélectionner et afficher le terminal d’origine.",
+    "session_tip": "{project}\n{provider} · Cliquez pour afficher les détails, puis pour les masquer.",
     "no_active": "Aucune session active.\nChoisissez Toutes pour voir les récentes.",
     "no_sessions": "Votre prochaine demande apparaîtra ici.\nOuvrez Claude Code ou Codex.",
     "duration": "{time} de session",
@@ -329,7 +335,9 @@
     "tagline": "Votre petit compagnon de code.",
     "choose_terminal": "Choisir le terminal…",
     "choose_terminal_tip": "Choisissez la fenêtre de cette session. Le lien reste actif tant que codumi est ouvert.",
-    "confirm_terminal": "Utiliser cette fenêtre"
+    "confirm_terminal": "Utiliser cette fenêtre",
+    "pet_session_note": "Le pet suit la session sélectionnée.",
+    "tokens_short": "{count} tokens"
   },
   "de": {
     "tray_title": "Sitzungen und Aktivität",
@@ -360,7 +368,7 @@
     "sound_on": "Abschlusston aktivieren",
     "topmost_off": "Vordergrund deaktivieren",
     "topmost_on": "Vordergrund aktivieren",
-    "session_tip": "{project}\n{provider} · Auswählen und ursprüngliches Terminal anzeigen.",
+    "session_tip": "{project}\n{provider} · Klicken zeigt Details; erneut klicken blendet sie aus.",
     "no_active": "Keine aktiven Sitzungen.\nUnter Alle stehen die letzten Sitzungen.",
     "no_sessions": "Die nächste Anfrage erscheint hier.\nÖffnen Sie Claude Code oder Codex.",
     "duration": "{time} Sitzungsdauer",
@@ -412,7 +420,9 @@
     "tagline": "Dein kleiner Programmierbegleiter.",
     "choose_terminal": "Terminalfenster auswählen…",
     "choose_terminal_tip": "Wähle das Fenster dieser Sitzung. Die Zuordnung gilt, solange codumi geöffnet ist.",
-    "confirm_terminal": "Dieses Fenster verwenden"
+    "confirm_terminal": "Dieses Fenster verwenden",
+    "pet_session_note": "Das Pet folgt der ausgewählten Sitzung.",
+    "tokens_short": "{count} Tokens"
   },
   "it": {
     "tray_title": "Sessioni e attività",
@@ -443,7 +453,7 @@
     "sound_on": "Attiva suono di completamento",
     "topmost_off": "Disattiva primo piano",
     "topmost_on": "Attiva primo piano",
-    "session_tip": "{project}\n{provider} · Seleziona e mostra il terminale originale.",
+    "session_tip": "{project}\n{provider} · Clicca per i dettagli; clicca ancora per nasconderli.",
     "no_active": "Nessuna sessione attiva.\nScegli Tutte per vedere le recenti.",
     "no_sessions": "La prossima richiesta apparirà qui.\nApri Claude Code o Codex.",
     "duration": "{time} di sessione",
@@ -495,6 +505,8 @@
     "tagline": "Il tuo piccolo compagno di codice.",
     "choose_terminal": "Scegli finestra del terminale…",
     "choose_terminal_tip": "Seleziona la finestra di questa sessione. Il collegamento dura finché codumi resta aperto.",
-    "confirm_terminal": "Usa questa finestra"
+    "confirm_terminal": "Usa questa finestra",
+    "pet_session_note": "Il pet segue la sessione selezionata.",
+    "tokens_short": "{count} token"
   }
 }

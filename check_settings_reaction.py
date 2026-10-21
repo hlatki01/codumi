@@ -101,11 +101,12 @@ with tempfile.TemporaryDirectory() as folder:
         pet.draw(204,reduced=True)
         assert pet.sprite_key[0]=="sleeping"
 
-        # Original-terminal lookup stays asynchronous and focuses only the clicked session.
+        # The explicit terminal action stays asynchronous and focuses only the selected session.
         first,second=app.sessions[0].key,app.sessions[1].key
         with patch("terminal.find_terminal",return_value=(100,200,300)),\
              patch("terminal.focus_terminal",return_value=True) as focus:
             app.select_session(first)
+            app.focus_selected_terminal()
             end=time.monotonic()+2
             while app.terminal_results.empty() and time.monotonic()<end:
                 time.sleep(.01)
@@ -115,6 +116,7 @@ with tempfile.TemporaryDirectory() as folder:
         with patch("terminal.find_terminal",return_value=None),\
              patch("terminal.focus_terminal") as focus:
             app.select_session(second)
+            app.focus_selected_terminal()
             end=time.monotonic()+2
             while app.terminal_results.empty() and time.monotonic()<end:
                 time.sleep(.01)
