@@ -46,10 +46,22 @@ Windows reduced-motion settings are respected. Personality should be comfortable
 
 Ten native pixel pets, one spot beside your work. These are their actual in-app working animations.
 
-| | | | | |
-| :---: | :---: | :---: | :---: | :---: |
-| <img src="docs/images/pets/codumi.gif" alt="codumi working animation from codumi" width="80" height="80"><br>**codumi** | <img src="docs/images/pets/cat.gif" alt="Cat working animation from codumi" width="80" height="80"><br>**Cat** | <img src="docs/images/pets/dog.gif" alt="Dog working animation from codumi" width="80" height="80"><br>**Dog** | <img src="docs/images/pets/fox.gif" alt="Fox working animation from codumi" width="80" height="80"><br>**Fox** | <img src="docs/images/pets/rabbit.gif" alt="Rabbit working animation from codumi" width="80" height="80"><br>**Rabbit** |
-| <img src="docs/images/pets/panda.gif" alt="Panda working animation from codumi" width="80" height="80"><br>**Panda** | <img src="docs/images/pets/frog.gif" alt="Frog working animation from codumi" width="80" height="80"><br>**Frog** | <img src="docs/images/pets/owl.gif" alt="Owl working animation from codumi" width="80" height="80"><br>**Owl** | <img src="docs/images/pets/robot.gif" alt="Robot working animation from codumi" width="80" height="80"><br>**Robot** | <img src="docs/images/pets/dragon.gif" alt="Dragon working animation from codumi" width="80" height="80"><br>**Dragon** |
+<table width="100%" align="center">
+  <tr>
+    <td align="center" width="20%"><img src="docs/images/pets/codumi.gif" alt="codumi working animation from codumi" width="80" height="80"><br><strong>codumi</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/cat.gif" alt="Cat working animation from codumi" width="80" height="80"><br><strong>Cat</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/dog.gif" alt="Dog working animation from codumi" width="80" height="80"><br><strong>Dog</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/fox.gif" alt="Fox working animation from codumi" width="80" height="80"><br><strong>Fox</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/rabbit.gif" alt="Rabbit working animation from codumi" width="80" height="80"><br><strong>Rabbit</strong></td>
+  </tr>
+  <tr>
+    <td align="center" width="20%"><img src="docs/images/pets/panda.gif" alt="Panda working animation from codumi" width="80" height="80"><br><strong>Panda</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/frog.gif" alt="Frog working animation from codumi" width="80" height="80"><br><strong>Frog</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/owl.gif" alt="Owl working animation from codumi" width="80" height="80"><br><strong>Owl</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/robot.gif" alt="Robot working animation from codumi" width="80" height="80"><br><strong>Robot</strong></td>
+    <td align="center" width="20%"><img src="docs/images/pets/dragon.gif" alt="Dragon working animation from codumi" width="80" height="80"><br><strong>Dragon</strong></td>
+  </tr>
+</table>
 
 Choose one in **Settings → Pet**. Drag the bubble wherever it feels at home; codumi remembers its position.
 
