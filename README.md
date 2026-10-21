@@ -9,7 +9,7 @@ A small animated desktop pet that keeps you company while Claude Code and Codex 
 [Download](https://github.com/hlatki01/codumi/releases/latest) · [Report a bug](https://github.com/hlatki01/codumi/issues) · [Contribute](CONTRIBUTING.md)
 
 <p align="center">
-  <img src="docs/images/codumi-windows.png" alt="codumi on Windows showing its floating pet, session tray, and token usage" width="480">
+  <img src="docs/images/codumi-demo.gif" alt="codumi in action: hover expansion, working animation, completion celebration, and resting pet" width="640">
 </p>
 
 ## Get started
